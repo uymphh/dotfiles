@@ -40,6 +40,7 @@
     xf86-video-nouveau
     xf86-input-libinput
     libinput
+    xinput
     i3-wm
     i3status
     dmenu
