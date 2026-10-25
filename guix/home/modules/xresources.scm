@@ -1,4 +1,4 @@
-(define-module (dotfiles guix home modules xresources)
+(define-module (guix home modules xresources)
   #:use-module (gnu home services)
   #:use-module (guix gexp)
   #:export (%my-xresources-service))

@@ -1,4 +1,4 @@
-(define-module (dotfiles guix system modules networking)
+(define-module (guix system modules networking)
   #:use-module (gnu services)
   #:use-module (gnu services networking)
   #:use-module (gnu packages admin)

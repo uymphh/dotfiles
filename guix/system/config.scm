@@ -1,3 +1,3 @@
-(use-modules (dotfiles guix system modules base))
+(use-modules (guix system modules base))
 
 %my-operating-system

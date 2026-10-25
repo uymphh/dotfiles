@@ -1,4 +1,4 @@
-(define-module (dotfiles guix system modules packages)
+(define-module (guix system modules packages)
   #:use-module (gnu packages)
   #:use-module (gnu packages admin)
   #:use-module (gnu packages base)

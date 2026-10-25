@@ -1,10 +1,10 @@
 (use-modules (gnu home)
              (gnu packages)
-             (dotfiles guix home modules packages)
-             (dotfiles guix home modules shell-zsh)
-             (dotfiles guix home modules wm-i3)
-             (dotfiles guix home modules nvim)
-             (dotfiles guix home modules xresources))
+             (guix home modules packages)
+             (guix home modules shell-zsh)
+             (guix home modules wm-i3)
+             (guix home modules nvim)
+             (guix home modules xresources))
 
 (home-environment
  (packages %my-home-packages)

@@ -1,4 +1,4 @@
-(define-module (dotfiles guix home modules nvim)
+(define-module (guix home modules nvim)
   #:use-module (gnu home services)
   #:use-module (guix gexp)
   #:export (%my-nvim-service))
