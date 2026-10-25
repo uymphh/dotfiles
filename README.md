@@ -88,14 +88,14 @@ Make sure `dotfiles/` is in your home directory or somewhere accessible. Run fro
 Once you apply your home config, you get these aliases:
 
 ```bash
-sysre   # sudo GUILE_LOAD_PATH=$HOME/dotfiles/guix guix system reconfigure $HOME/dotfiles/guix/system/config.scm
-homere  # GUILE_LOAD_PATH=$HOME/dotfiles/guix guix home reconfigure $HOME/dotfiles/guix/home/config.scm
+sysre   # sudo GUILE_LOAD_PATH=$HOME/dotfiles guix system reconfigure $HOME/dotfiles/guix/system/config.scm
+homere  # GUILE_LOAD_PATH=$HOME/dotfiles guix home reconfigure $HOME/dotfiles/guix/home/config.scm
 ```
 
 ### Manual commands
 ```bash
-sudo GUILE_LOAD_PATH=$HOME/dotfiles/guix guix system reconfigure $HOME/dotfiles/guix/system/config.scm
-GUILE_LOAD_PATH=$HOME/dotfiles/guix guix home reconfigure $HOME/dotfiles/guix/home/config.scm
+sudo GUILE_LOAD_PATH=$HOME/dotfiles guix system reconfigure $HOME/dotfiles/guix/system/config.scm
+GUILE_LOAD_PATH=$HOME/dotfiles guix home reconfigure $HOME/dotfiles/guix/home/config.scm
 ```
 
 ## 5) First boot notes
