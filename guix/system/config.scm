@@ -1,3 +1,3 @@
-(add-to-load-path (dirname (current-filename)))
-(use-modules (system modules base))
+(use-modules (guix system modules base))
+
 %my-operating-system

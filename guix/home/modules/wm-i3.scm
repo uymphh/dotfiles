@@ -1,4 +1,4 @@
-(define-module (home modules wm-i3)
+(define-module (guix home modules wm-i3)
   #:use-module (gnu home services)
   #:use-module (gnu services configuration)
   #:use-module (guix gexp)

@@ -1,4 +1,4 @@
-(define-module (home modules packages)
+(define-module (guix home modules packages)
   #:use-module (gnu packages)
   #:use-module (gnu packages vim)
   #:use-module (gnu packages git)

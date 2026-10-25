@@ -1,4 +1,4 @@
-(define-module (system modules xorg-touchpad)
+(define-module (guix system modules xorg-touchpad)
   #:use-module (gnu services xorg)
   #:use-module (gnu packages xorg)
   #:export (%my-touchpad-xorg-configuration))
