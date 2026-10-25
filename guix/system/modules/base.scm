@@ -10,8 +10,8 @@
 
 (define %my-operating-system
   (operating-system
-   (host-name "guixbox")
-   (timezone "Etc/UTC")
+   (host-name "guix-btw")
+   (timezone "America/Los_Angeles")
    (locale "en_US.utf8")
 
    (kernel %my-kernel)

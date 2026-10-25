@@ -15,7 +15,7 @@
    (list
     (service slim-service-type
              (slim-configuration
-              (default-user "yourusername")
+              (default-user "arctan")
               (auto-login? #f)
               (xorg-configuration %my-touchpad-xorg-configuration)))
     (service elogind-service-type)

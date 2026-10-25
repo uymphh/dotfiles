@@ -8,10 +8,9 @@
   (append
    (list
     (user-account
-     (name "yourusername")
-     (comment "Your Name")
+     (name "arctan")
      (group "users")
      (supplementary-groups '("wheel" "netdev" "audio" "video" "input"))
-     (home-directory "/home/yourusername")
+     (home-directory "/home/arctan")
      (shell "/run/current-system/profile/bin/zsh")))
    %base-user-accounts))
