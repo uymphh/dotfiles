@@ -14,7 +14,7 @@
                "export PATH=$HOME/.local/bin:$PATH
 alias ll='ls -la'
 alias vim='nvim'
-alias sysre='sudo GUILE_LOAD_PATH=$HOME/dotfiles guix system reconfigure $HOME/dotfiles/guix/system/config.scm'
+alias sysre='sudo guix system reconfigure $HOME/dotfiles/guix/system/config.scm'
 alias homere='GUILE_LOAD_PATH=$HOME/dotfiles guix home reconfigure $HOME/dotfiles/guix/home/config.scm'
 PROMPT='%F{green}%n@%m%f:%F{blue}%~%f$ '
 "))))))
