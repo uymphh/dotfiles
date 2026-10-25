@@ -1,4 +1,4 @@
-(define-module (guix system modules boot)
+(define-module (system modules boot)
   #:use-module (gnu bootloader)
   #:use-module (gnu bootloader grub)
   #:use-module (gnu system)

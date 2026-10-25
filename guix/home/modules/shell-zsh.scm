@@ -1,4 +1,4 @@
-(define-module (guix home modules shell-zsh)
+(define-module (home modules shell-zsh)
   #:use-module (gnu home services shells)
   #:use-module (gnu packages shells)
   #:use-module (srfi srfi-1)

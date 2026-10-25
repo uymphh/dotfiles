@@ -1,4 +1,4 @@
-(define-module (guix system modules hardware)
+(define-module (system modules hardware)
   #:use-module (gnu system)
   #:use-module (gnu services)
   #:use-module (gnu services base)

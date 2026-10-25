@@ -1,10 +1,11 @@
+(add-to-load-path (dirname (current-filename)))
 (use-modules (gnu home)
              (gnu packages)
-             ((guix home modules packages) #:select (%my-home-packages))
-             ((guix home modules shell-zsh) #:select (%my-zsh-service))
-             ((guix home modules wm-i3) #:select (%my-i3-service))
-             ((guix home modules nvim) #:select (%my-nvim-service))
-             ((guix home modules xresources) #:select (%my-xresources-service)))
+             (home modules packages)
+             (home modules shell-zsh)
+             (home modules wm-i3)
+             (home modules nvim)
+             (home modules xresources))
 
 (home-environment
  (packages %my-home-packages)

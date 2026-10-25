@@ -1,4 +1,4 @@
-(define-module (guix system modules firmware-kernel)
+(define-module (system modules firmware-kernel)
   #:use-module (gnu system)
   #:use-module (gnu packages linux)
   #:use-module (nongnu packages linux)

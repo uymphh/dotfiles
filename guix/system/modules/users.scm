@@ -1,4 +1,4 @@
-(define-module (guix system modules users)
+(define-module (system modules users)
   #:use-module (gnu system)
   #:use-module (gnu system shadow)
   #:use-module (srfi srfi-1)
