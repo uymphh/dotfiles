@@ -161,7 +161,13 @@ EndSection
 
     ;; networking
     (service connman-service-type))
-   %base-services))
+   ;; Add brightnessctl's udev rule so the media keys work without root.
+   (modify-services %base-services
+     (udev-service-type config =>
+       (udev-configuration
+        (inherit config)
+        (rules (cons (specification->package "brightnessctl")
+                     (udev-configuration-rules config))))))))
 
 ;; ---------------------------------------------------------------
 ;; users

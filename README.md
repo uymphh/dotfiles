@@ -102,7 +102,15 @@ xinput list-props <touchpad-id>
 
 ## 4) Install / reconfigure
 
-System (no load path needed):
+Build first. This catches syntax errors and bad package names without touching
+the running system:
+
+```bash
+sudo guix system build ~/dotfiles/guix/system/config.scm
+guix home build ~/dotfiles/guix/home/config.scm
+```
+
+Then apply the system config (no load path needed):
 
 ```bash
 sudo guix system reconfigure ~/dotfiles/guix/system/config.scm
@@ -187,8 +195,9 @@ colors, and an i3bar with battery, CPU, memory, disk, load, and clock modules.
   and HTML, which is what `xdg-open` and desktop files use.
 - Kitty is configured with DejaVu Sans Mono, 10 px padding, 0.92 background
   opacity, 10k scrollback, and a dark 16-color palette.
-- Rofi gets its colors from `~/.Xresources`; i3 runs `xrdb -merge` on startup
-  and reload.
+- Rofi is themed in `~/.config/rofi/config.rasi` (Catppuccin-ish colors,
+  rounded border, icon rows). Rofi 2.0 no longer reads Xresources, so
+  `~/.Xresources` is only used for xterm and Xft settings.
 
 ### D-Bus session and `.xsession`
 
@@ -231,15 +240,16 @@ will fall back to starting `i3` directly.
 - **Window manager**: i3. See the keybinding table above.
 - **Shell**: zsh is the login shell.
 - **Intel + NVIDIA hybrid**: this config installs the Intel and nouveau Xorg
-  drivers and lets Xorg pick the right one. For the proprietary NVIDIA driver
-  use the nonguix `nonguix-transformation-nvidia` helper. Ask before enabling
-  it.
+  drivers and lets Xorg pick the right one. It does **not** enable the
+  proprietary NVIDIA driver. If you want that later, use nonguix's
+  `nongnu/services/nvidia.scm` (`nvidia-service-type`) or its
+  `etc/manifests/nonguix-nvidia` manifest; ask before enabling it.
 - **Intel VMD**: handled by the kernel; no extra configuration here.
 - **WM session**: slim is configured with `auto-login-session "i3"`, and the
   home config installs `~/.xsession`, which starts i3 inside `dbus-run-session`.
   Log in as `arctan`; you do not need to pick a session manually.
-- **X resources**: the home config installs `~/.Xresources`; i3 runs
-  `xrdb -merge` on startup/reload.
+- **X resources**: the home config installs `~/.Xresources` (xterm font and Xft
+  settings); i3 runs `xrdb -merge` on startup/reload. Rofi does not use it.
 
 ## Checks before rebooting
 
@@ -261,8 +271,9 @@ will fall back to starting `i3` directly.
 - **No notifications**: check that `dunst` is running (`pgrep dunst`) and that
   `~/.xsession` exists and is executable. Test with
   `notify-send 'test' 'hello'`.
-- **Rofi is unthemed**: make sure `xrdb -merge ~/.Xresources` ran; log out/in or
-  reload i3 (`Mod4+Shift+C`).
+- **Rofi looks wrong or will not start**: run `rofi -show drun` from a terminal
+  and read the error. Theme problems point at `~/.config/rofi/config.rasi`;
+  rename that file temporarily to fall back to the built-in theme.
 - **If `guix system reconfigure` complains about `nongnu` modules**, run
   `guix pull` again with `~/.config/guix/channels.scm` in place.
 - **If a `specification->package` name is wrong**, the error names the missing

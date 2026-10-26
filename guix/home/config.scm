@@ -35,7 +35,7 @@ set $browser icecat
 
 font pango:DejaVu Sans Mono 10
 
-# X resources (rofi colors, xterm font)
+# X resources (xterm font)
 exec_always --no-startup-id xrdb -merge ~/.Xresources
 
 # wallpaper
@@ -278,6 +278,65 @@ copy_on_select no
     display-drun: \"Apps\";
     case-sensitive: false;
 }
+
+/* Catppuccin Mocha-ish theme.  Rofi 2.0 ignores Xresources, so the
+   colors live here instead of in ~/.Xresources. */
+window {
+    background-color: #1e1e2e;
+    border: 2px;
+    border-color: #89b4fa;
+    border-radius: 8px;
+    width: 40%;
+    padding: 10px;
+}
+
+mainbox {
+    spacing: 8px;
+}
+
+inputbar {
+    background-color: #313244;
+    border-radius: 6px;
+    padding: 8px;
+    spacing: 8px;
+}
+
+prompt {
+    background-color: transparent;
+    text-color: #89b4fa;
+}
+
+entry {
+    background-color: transparent;
+    text-color: #cdd6f4;
+    placeholder: \"Search\";
+    placeholder-color: #6c7086;
+}
+
+listview {
+    background-color: transparent;
+    lines: 8;
+    columns: 1;
+    spacing: 4px;
+    scrollbar: false;
+}
+
+element {
+    background-color: transparent;
+    text-color: #cdd6f4;
+    border-radius: 6px;
+    padding: 6px 8px;
+    spacing: 8px;
+}
+
+element-icon {
+    size: 1.2em;
+}
+
+element selected {
+    background-color: #89b4fa;
+    text-color: #1e1e2e;
+}
 "))
 
 (define %picom-config
@@ -415,11 +474,6 @@ Xft.rgba: rgb
 xterm*faceName: DejaVu Sans Mono
 xterm*faceSize: 11
 xterm*scrollBar: false
-rofi.font: DejaVu Sans Mono 11
-rofi.color-window: #1e1e2e, #89b4fa, #1e1e2e
-rofi.color-normal: #1e1e2e, #cdd6f4, #1e1e2e, #89b4fa, #1e1e2e
-rofi.color-active: #1e1e2e, #cdd6f4, #1e1e2e, #89b4fa, #1e1e2e
-rofi.color-urgent: #1e1e2e, #f38ba8, #1e1e2e, #f38ba8, #1e1e2e
 "))
 
 (define %nvim-init
