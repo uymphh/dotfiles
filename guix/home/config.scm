@@ -8,7 +8,7 @@
              (guix gexp))
 
 ;; ---------------------------------------------------------------
-;; files
+;; shell
 ;; ---------------------------------------------------------------
 
 (define %zshrc
@@ -22,17 +22,37 @@ alias homere='guix home reconfigure $HOME/dotfiles/guix/home/config.scm'
 PROMPT='%F{green}%n@%m%f:%F{blue}%~%f$ '
 "))
 
+;; ---------------------------------------------------------------
+;; i3
+;; ---------------------------------------------------------------
+
 (define %i3-config
   (plain-file
    "i3config"
    "set $mod Mod4
-font pango:monospace 8
+set $term kitty
+set $browser icecat
 
-# load X resources
+font pango:DejaVu Sans Mono 10
+
+# X resources (rofi colors, xterm font)
 exec_always --no-startup-id xrdb -merge ~/.Xresources
 
+# wallpaper
+exec_always --no-startup-id feh --bg-fill ~/.local/share/wallpapers/guix-dark.png
+
+# compositor and notifications
+exec --no-startup-id picom --config ~/.config/picom/picom.conf
+exec --no-startup-id dunst
+
 # launcher
-bindsym $mod+d exec dmenu_run
+bindsym $mod+d exec rofi -show drun
+bindsym $mod+Shift+d exec dmenu_run
+
+# terminal and browser
+bindsym $mod+Return exec $term
+bindsym $mod+Shift+Return exec xterm
+bindsym $mod+Shift+b exec $browser --profile ~/.config/icecat
 
 # brightness
 bindsym XF86MonBrightnessUp exec brightnessctl set +5%
@@ -44,16 +64,18 @@ bindsym XF86AudioLowerVolume exec amixer -q sset Master 5%-
 bindsym XF86AudioMute exec amixer -q sset Master toggle
 
 # windows
-bindsym $mod+Return exec xterm
 bindsym $mod+Shift+q kill
+bindsym $mod+Shift+c reload
 bindsym $mod+Shift+r restart
-bindsym $mod+Shift+e exit
+bindsym $mod+Shift+e exec i3-nagbar -t warning -m 'Exit i3?' -B 'Yes' 'i3-msg exit'
 
 # focus
 bindsym $mod+h focus left
 bindsym $mod+j focus down
 bindsym $mod+k focus up
 bindsym $mod+l focus right
+bindsym $mod+a focus parent
+bindsym $mod+space focus mode_toggle
 
 # move
 bindsym $mod+Shift+h move left
@@ -86,13 +108,58 @@ bindsym $mod+Shift+0 move container to workspace 10
 
 # layout
 bindsym $mod+f fullscreen toggle
+bindsym $mod+Shift+f floating toggle
 bindsym $mod+v split v
 bindsym $mod+s layout stacking
 bindsym $mod+w layout tabbed
 bindsym $mod+e layout toggle split
 
+# resize mode
+bindsym $mod+r mode \"resize\"
+
+# gaps, borders, focus
+gaps inner 8
+gaps outer 4
+smart_gaps on
+smart_borders on
+default_border pixel 2
+default_floating_border pixel 2
+hide_edge_borders smart
+focus_follows_mouse no
+mouse_warping output
+workspace_auto_back_and_forth yes
+
+# colors
+client.focused          #89b4fa #1e1e2e #cdd6f4 #89b4fa #89b4fa
+client.focused_inactive #45475a #1e1e2e #cdd6f4 #45475a #45475a
+client.unfocused        #45475a #1e1e2e #a6adc8 #45475a #45475a
+client.urgent           #f38ba8 #1e1e2e #1e1e2e #f38ba8 #f38ba8
+client.placeholder      #1e1e2e #1e1e2e #cdd6f4 #1e1e2e #1e1e2e
+client.background       #1e1e2e
+
 bar {
     status_command i3status
+    position top
+    tray_output none
+    font pango:DejaVu Sans Mono 10
+    colors {
+        background #1e1e2e
+        statusline #cdd6f4
+        separator #45475a
+        focused_workspace  #89b4fa #89b4fa #1e1e2e
+        active_workspace   #45475a #45475a #cdd6f4
+        inactive_workspace #1e1e2e #1e1e2e #a6adc8
+        urgent_workspace   #f38ba8 #f38ba8 #1e1e2e
+    }
+}
+
+mode \"resize\" {
+    bindsym h resize shrink width 10 px or 10 ppt
+    bindsym j resize grow height 10 px or 10 ppt
+    bindsym k resize shrink height 10 px or 10 ppt
+    bindsym l resize grow width 10 px or 10 ppt
+    bindsym Return mode \"default\"
+    bindsym Escape mode \"default\"
 }
 "))
 
@@ -101,24 +168,258 @@ bar {
    "i3status.conf"
    "general {
     colors = true
-    interval = 5
+    interval = 3
+    color_good = \"#a6e3a1\"
+    color_degraded = \"#f9e2af\"
+    color_bad = \"#f38ba8\"
 }
 
+order += \"battery all\"
+order += \"cpu_usage\"
+order += \"memory\"
 order += \"disk /\"
 order += \"load\"
-order += \"clock\"
+order += \"tztime local\"
+
+battery all {
+    format = \"batt %percentage\"
+}
+
+cpu_usage {
+    format = \"cpu %usage\"
+}
+
+memory {
+    format = \"mem %used\"
+}
 
 disk \"/\" {
-    format = \"/ %avail\"
+    format = \"disk %avail\"
 }
 
 load {
-    format = \"%1min\"
+    format = \"load %1min\"
 }
 
-clock {
+tztime local {
     format = \"%Y-%m-%d %H:%M\"
 }
+"))
+
+;; ---------------------------------------------------------------
+;; rice: kitty, rofi, picom, dunst, icecat
+;; ---------------------------------------------------------------
+
+(define %kitty-config
+  (plain-file
+   "kitty.conf"
+   "font_family DejaVu Sans Mono
+font_size 11
+bold_font auto
+italic_font auto
+
+cursor_shape beam
+cursor_blink_interval 0.5
+scrollback_lines 10000
+enable_audio_bell no
+window_padding_width 10
+background_opacity 0.92
+
+foreground #cdd6f4
+background #1e1e2e
+selection_foreground #1e1e2e
+selection_background #89b4fa
+cursor #f5e0dc
+url_color #89b4fa
+
+color0 #45475a
+color8 #585b70
+color1 #f38ba8
+color9 #f38ba8
+color2 #a6e3a1
+color10 #a6e3a1
+color3 #f9e2af
+color11 #f9e2af
+color4 #89b4fa
+color12 #89b4fa
+color5 #f5c2e7
+color13 #f5c2e7
+color6 #94e2d5
+color14 #94e2d5
+color7 #bac2de
+color15 #a6adc8
+
+active_border_color #89b4fa
+inactive_border_color #45475a
+
+tab_bar_style powerline
+tab_powerline_style slanted
+active_tab_background #89b4fa
+active_tab_foreground #1e1e2e
+inactive_tab_background #313244
+inactive_tab_foreground #cdd6f4
+tab_bar_background #1e1e2e
+tab_bar_margin_width 0
+tab_bar_edge top
+tab_title_template {index}: {title}
+
+copy_on_select no
+"))
+
+(define %rofi-config
+  (plain-file
+   "config.rasi"
+   "configuration {
+    font: \"DejaVu Sans Mono 11\";
+    show-icons: true;
+    icon-theme: \"Adwaita\";
+    terminal: \"kitty\";
+    drun-display-format: \"{name}\";
+    display-drun: \"Apps\";
+    case-sensitive: false;
+}
+"))
+
+(define %picom-config
+  (plain-file
+   "picom.conf"
+   "backend = \"glx\";
+vsync = true;
+shadow = true;
+shadow-radius = 8;
+shadow-opacity = 0.35;
+shadow-offset-x = -8;
+shadow-offset-y = -8;
+fading = true;
+fade-in-step = 0.03;
+fade-out-step = 0.03;
+inactive-opacity = 0.95;
+frame-opacity = 0.90;
+"))
+
+(define %dunst-config
+  (plain-file
+   "dunstrc"
+   "[global]
+    font = DejaVu Sans Mono 10
+    frame_width = 2
+    frame_color = \"#89b4fa\"
+    separator_color = frame
+    corner_radius = 8
+    background = \"#1e1e2e\"
+    foreground = \"#cdd6f4\"
+    timeout = 6
+    width = 320
+    height = 120
+    origin = top-right
+    offset = 12x40
+    icon_position = left
+    max_icon_size = 32x32
+    markup = full
+    format = \"<b>%s</b>\\n%b\"
+
+[urgency_low]
+    background = \"#1e1e2e\"
+    foreground = \"#cdd6f4\"
+    timeout = 5
+
+[urgency_normal]
+    background = \"#1e1e2e\"
+    foreground = \"#cdd6f4\"
+    timeout = 6
+
+[urgency_critical]
+    background = \"#f38ba8\"
+    foreground = \"#1e1e2e\"
+    frame_color = \"#f38ba8\"
+    timeout = 0
+"))
+
+(define %icecat-user-js
+  (plain-file
+   "user.js"
+   "// privacy defaults for the dedicated IceCat profile
+user_pref(\"app.normandy.enabled\", false);
+user_pref(\"app.shield.optoutstudies.enabled\", false);
+user_pref(\"browser.contentblocking.category\", \"strict\");
+user_pref(\"browser.newtabpage.activity-stream.feeds.telemetry\", false);
+user_pref(\"browser.newtabpage.activity-stream.telemetry\", false);
+user_pref(\"browser.newtabpage.enabled\", false);
+user_pref(\"browser.ping-centre.telemetry\", false);
+user_pref(\"browser.search.suggest.enabled\", false);
+user_pref(\"browser.startup.homepage\", \"about:blank\");
+user_pref(\"browser.startup.page\", 0);
+user_pref(\"browser.tabs.warnOnClose\", false);
+user_pref(\"browser.urlbar.suggest.searches\", false);
+user_pref(\"datareporting.healthreport.uploadEnabled\", false);
+user_pref(\"datareporting.policy.dataSubmissionEnabled\", false);
+user_pref(\"network.cookie.cookieBehavior\", 1);
+user_pref(\"privacy.donottrackheader.enabled\", true);
+user_pref(\"privacy.trackingprotection.enabled\", true);
+user_pref(\"privacy.trackingprotection.socialtracking.enabled\", true);
+user_pref(\"toolkit.telemetry.archive.enabled\", false);
+user_pref(\"toolkit.telemetry.enabled\", false);
+user_pref(\"toolkit.telemetry.unified\", false);
+"))
+
+(define %icecat-desktop
+  (plain-file
+   "icecat.desktop"
+   "[Desktop Entry]
+Version=1.0
+Name=GNU IceCat
+GenericName=Web Browser
+Comment=GNU IceCat with the riced profile
+Exec=icecat --profile /home/arctan/.config/icecat %u
+Icon=icecat
+Terminal=false
+Type=Application
+StartupWMClass=Icecat
+MimeType=text/html;text/xml;application/xhtml+xml;text/mml;x-scheme-handler/http;x-scheme-handler/https;
+StartupNotify=true
+X-MultipleArgs=false
+Categories=Network;WebBrowser;
+Encoding=UTF-8
+"))
+
+(define %mimeapps
+  (plain-file
+   "mimeapps.list"
+   "[Default Applications]
+text/html=icecat.desktop
+text/xml=icecat.desktop
+text/mml=icecat.desktop
+application/xhtml+xml=icecat.desktop
+x-scheme-handler/http=icecat.desktop
+x-scheme-handler/https=icecat.desktop
+x-scheme-handler/about=icecat.desktop
+x-scheme-handler/unknown=icecat.desktop
+"))
+
+(define %gtk-settings
+  (plain-file
+   "settings.ini"
+   "[Settings]
+gtk-theme-name=Adwaita
+gtk-icon-theme-name=Adwaita
+gtk-font-name=DejaVu Sans 10
+gtk-application-prefer-dark-theme=1
+"))
+
+(define %xresources
+  (plain-file
+   "Xresources"
+   "Xft.antialias: true
+Xft.hinting: true
+Xft.rgba: rgb
+xterm*faceName: DejaVu Sans Mono
+xterm*faceSize: 11
+xterm*scrollBar: false
+rofi.font: DejaVu Sans Mono 11
+rofi.color-window: #1e1e2e, #89b4fa, #1e1e2e
+rofi.color-normal: #1e1e2e, #cdd6f4, #1e1e2e, #89b4fa, #1e1e2e
+rofi.color-active: #1e1e2e, #cdd6f4, #1e1e2e, #89b4fa, #1e1e2e
+rofi.color-urgent: #1e1e2e, #f38ba8, #1e1e2e, #f38ba8, #1e1e2e
 "))
 
 (define %nvim-init
@@ -141,13 +442,9 @@ vim.opt.scrolloff = 8
 vim.opt.updatetime = 50
 "))
 
-(define %xresources
-  (plain-file
-   "Xresources"
-   "xterm*faceName: monospace
-xterm*faceSize: 10
-xterm*scrollBar: false
-"))
+;; Local file resolved relative to this config file.
+(define %wallpaper
+  (local-file "../../wallpapers/guix-dark.png"))
 
 ;; ---------------------------------------------------------------
 ;; home environment
@@ -165,18 +462,47 @@ xterm*scrollBar: false
          "xrdb"
          "brightnessctl"
          "alsa-utils"
-         "htop")))
+         "htop"
+         "dbus"
+         "adwaita-icon-theme"
+         "icecat"
+         "kitty"
+         "rofi"
+         "feh"
+         "picom"
+         "dunst"
+         "libnotify"
+         "xdg-utils")))
  (services
   (list
    (service home-zsh-service-type
             (home-zsh-configuration
              (zshrc (list %zshrc))))
 
+   (service home-environment-variables-service-type
+            `(("EDITOR" . "nvim")
+              ("VISUAL" . "nvim")
+              ("TERMINAL" . "kitty")
+              ("BROWSER" . "icecat")))
+
    (simple-service
     'i3-config
     home-files-service-type
     (list `(".config/i3/config" ,%i3-config)
           `(".config/i3status/config" ,%i3status-config)))
+
+   (simple-service
+    'rice-config
+    home-files-service-type
+    (list `(".config/kitty/kitty.conf" ,%kitty-config)
+          `(".config/rofi/config.rasi" ,%rofi-config)
+          `(".config/picom/picom.conf" ,%picom-config)
+          `(".config/dunst/dunstrc" ,%dunst-config)
+          `(".config/icecat/user.js" ,%icecat-user-js)
+          `(".config/mimeapps.list" ,%mimeapps)
+          `(".config/gtk-3.0/settings.ini" ,%gtk-settings)
+          `(".local/share/applications/icecat.desktop" ,%icecat-desktop)
+          `(".local/share/wallpapers/guix-dark.png" ,%wallpaper)))
 
    (simple-service
     'nvim-config
@@ -186,4 +512,19 @@ xterm*scrollBar: false
    (simple-service
     'xresources
     home-files-service-type
-    (list `(".Xresources" ,%xresources))))))
+    (list `(".Xresources" ,%xresources)))
+
+   ;; Start i3 inside a D-Bus session so dunst and browser integration work.
+   (simple-service
+    'dbus-session
+    home-activation-service-type
+    #~(begin
+        (let ((file (string-append (getenv "HOME") "/.xsession")))
+          (call-with-output-file file
+            (lambda (port)
+              (display "#!/bin/sh\n" port)
+              (display "export XDG_CURRENT_DESKTOP=i3\n" port)
+              (display "export XDG_SESSION_TYPE=x11\n" port)
+              (display "export MOZ_ENABLE_WAYLAND=0\n" port)
+              (display "exec dbus-run-session -- i3\n" port)))
+          (chmod file #o755)))))))

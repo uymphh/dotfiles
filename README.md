@@ -1,7 +1,7 @@
-# Dotfiles for Guix (i3 + connman + nonguix)
+# Dotfiles for Guix (i3 + IceCat + kitty)
 
 Guix System + Guix Home configuration for a laptop with Intel WiFi (AX200/AX211),
-hybrid Intel + NVIDIA graphics, and an i3 desktop.
+hybrid Intel + NVIDIA graphics, and a riced i3 desktop.
 
 The two configs are **single files with no local modules**, so there is no
 `GUILE_LOAD_PATH` to set and no "unbound variable" / "no code for module" games.
@@ -13,6 +13,8 @@ on guessing which `(gnu packages ...)` module defines each package.
 ```
 dotfiles/
   README.md
+  wallpapers/
+    guix-dark.png       -> installed as ~/.local/share/wallpapers/guix-dark.png
   guix/
     channels.scm        -> copy to ~/.config/guix/channels.scm
     system/
@@ -112,14 +114,101 @@ Home (no load path needed):
 guix home reconfigure ~/dotfiles/guix/home/config.scm
 ```
 
-After applying the home config you get these zsh aliases:
+The first reconfigure downloads a lot, including IceCat. After applying the
+home config you get these zsh aliases:
 
 ```bash
 sysre    # sudo guix system reconfigure ~/dotfiles/guix/system/config.scm
 homere   # guix home reconfigure ~/dotfiles/guix/home/config.scm
 ```
 
-## 5) First boot notes
+## 5) The rice
+
+The desktop is built around:
+
+| Purpose | Program | Notes |
+| --- | --- | --- |
+| browser | `icecat` | GNU IceCat, a free-software Firefox derivative |
+| terminal | `kitty` | GPU terminal, Catppuccin-ish palette |
+| launcher | `rofi` | `rofi -show drun`, dmenu kept as fallback |
+| compositor | `picom` | shadows/fading, starts from i3 |
+| wallpaper | `feh` | `wallpapers/guix-dark.png` |
+| notifications | `dunst` | started from i3 inside a D-Bus session |
+
+The apps are installed in both the system profile and the home profile. The
+system copy makes sure the i3 session can always find them even if the home
+profile PATH is not loaded for some reason.
+
+Installed config files:
+
+```text
+~/.config/i3/config
+~/.config/i3status/config
+~/.config/kitty/kitty.conf
+~/.config/rofi/config.rasi
+~/.config/picom/picom.conf
+~/.config/dunst/dunstrc
+~/.config/icecat/user.js
+~/.config/mimeapps.list
+~/.config/gtk-3.0/settings.ini
+~/.Xresources
+~/.xsession
+~/.local/share/applications/icecat.desktop
+~/.local/share/wallpapers/guix-dark.png
+```
+
+### Keybindings
+
+| Keys | Action |
+| --- | --- |
+| `Mod4+Return` | kitty |
+| `Mod4+Shift+Return` | xterm fallback |
+| `Mod4+Shift+B` | IceCat |
+| `Mod4+D` | rofi application launcher |
+| `Mod4+Shift+D` | dmenu fallback |
+| `Mod4+R` | resize mode (`h/j/k/l`, then `Return` or `Escape`) |
+| `Mod4+Shift+C` | reload i3 |
+| `Mod4+Shift+R` | restart i3 |
+| `Mod4+Shift+Q` | close window |
+| `Mod4+Shift+E` | exit i3 (confirmation) |
+
+The i3 config uses gaps (`inner 8`, `outer 4`), pixel borders, Catppuccin-ish
+colors, and an i3bar with battery, CPU, memory, disk, load, and clock modules.
+
+### Browser and terminal details
+
+- IceCat uses a dedicated profile at `~/.config/icecat` so its `user.js`
+  privacy defaults apply without touching another Firefox/IceCat profile.
+- The user-level `icecat.desktop` starts that same profile, so links opened
+  from rofi, `xdg-open`, or other apps use the privacy settings too. It
+  contains the literal path `/home/arctan`; update it if your home path is
+  different.
+- `~/.config/mimeapps.list` makes IceCat the default handler for HTTP, HTTPS,
+  and HTML, which is what `xdg-open` and desktop files use.
+- Kitty is configured with DejaVu Sans Mono, 10 px padding, 0.92 background
+  opacity, 10k scrollback, and a dark 16-color palette.
+- Rofi gets its colors from `~/.Xresources`; i3 runs `xrdb -merge` on startup
+  and reload.
+
+### D-Bus session and `.xsession`
+
+Slim starts `~/.xsession` if it exists. The home activation service creates it
+with:
+
+```sh
+#!/bin/sh
+export XDG_CURRENT_DESKTOP=i3
+export XDG_SESSION_TYPE=x11
+export MOZ_ENABLE_WAYLAND=0
+exec dbus-run-session -- i3
+```
+
+That gives i3 and its children a session bus, which dunst and browser desktop
+integration need. If this causes trouble on your machine, comment out the
+`dbus-session` service in `guix/home/config.scm` and remove `~/.xsession`; slim
+will fall back to starting `i3` directly.
+
+## 6) First boot notes
 
 - **WiFi**: Intel AX200/AX210/AX211 firmware comes from `linux-firmware`.
   Connect with `connmanctl`:
@@ -139,18 +228,18 @@ homere   # guix home reconfigure ~/dotfiles/guix/home/config.scm
 - **Audio**: ALSA only (`alsa-utils`). The i3 volume keys use `amixer`.
   Manual test: `alsamixer`.
 - **Editor**: `nvim` with a small `init.lua` (line numbers, 4 spaces).
-- **Window manager**: i3. `Mod4+d` = dmenu, `Mod4+Return` = xterm.
+- **Window manager**: i3. See the keybinding table above.
 - **Shell**: zsh is the login shell.
 - **Intel + NVIDIA hybrid**: this config installs the Intel and nouveau Xorg
   drivers and lets Xorg pick the right one. For the proprietary NVIDIA driver
   use the nonguix `nonguix-transformation-nvidia` helper. Ask before enabling
   it.
 - **Intel VMD**: handled by the kernel; no extra configuration here.
-- **WM session**: slim is configured with `auto-login-session "i3"`, so it
-  starts i3 even if no i3 `.desktop` session file is installed. Log in as
-  `arctan`; you do not need to pick a session manually.
-- **X resources**: the home config installs `~/.Xresources` and the i3 config
-  runs `xrdb -merge ~/.Xresources` on startup/reload.
+- **WM session**: slim is configured with `auto-login-session "i3"`, and the
+  home config installs `~/.xsession`, which starts i3 inside `dbus-run-session`.
+  Log in as `arctan`; you do not need to pick a session manually.
+- **X resources**: the home config installs `~/.Xresources`; i3 runs
+  `xrdb -merge` on startup/reload.
 
 ## Checks before rebooting
 
@@ -160,11 +249,23 @@ homere   # guix home reconfigure ~/dotfiles/guix/home/config.scm
 - Keep the previous system generation in GRUB. If the new one misbehaves,
   pick the old generation at boot.
 
-## Tips
+## Troubleshooting
 
-- If `guix system reconfigure` complains about `nongnu` modules, run
+- **Kitty will not start**: try `Mod4+Shift+Return` for xterm, then run `kitty`
+  from a terminal to see the error. GPU/driver issues are the usual cause.
+- **No wallpaper**: run
+  `feh --bg-fill ~/.local/share/wallpapers/guix-dark.png` manually.
+- **No shadows/transparency**: run
+  `picom --config ~/.config/picom/picom.conf` manually and read the output.
+  If picom fails, comment out its `exec` line in the i3 config; i3 still works.
+- **No notifications**: check that `dunst` is running (`pgrep dunst`) and that
+  `~/.xsession` exists and is executable. Test with
+  `notify-send 'test' 'hello'`.
+- **Rofi is unthemed**: make sure `xrdb -merge ~/.Xresources` ran; log out/in or
+  reload i3 (`Mod4+Shift+C`).
+- **If `guix system reconfigure` complains about `nongnu` modules**, run
   `guix pull` again with `~/.config/guix/channels.scm` in place.
-- If a `specification->package` name is wrong, the error names the missing
+- **If a `specification->package` name is wrong**, the error names the missing
   package. Add/remove the string in the package list.
-- If the touchpad still misbehaves, paste `xinput list-props` output and the
+- **If the touchpad still misbehaves**, paste `xinput list-props` output and the
   `ClickMethod` can be adjusted.

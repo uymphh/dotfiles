@@ -97,7 +97,17 @@
           "xterm"
           "brightnessctl"
           "neovim"
-          "connman"))
+          "connman"
+          "dbus"
+          "adwaita-icon-theme"
+          "icecat"
+          "kitty"
+          "rofi"
+          "feh"
+          "picom"
+          "dunst"
+          "libnotify"
+          "xdg-utils"))
    %base-packages))
 
 ;; ---------------------------------------------------------------
