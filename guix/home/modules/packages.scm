@@ -1,18 +1,17 @@
 (define-module (guix home modules packages)
   #:use-module (gnu packages)
-  #:use-module (gnu packages vim)
-  #:use-module (gnu packages git)
-  #:use-module (gnu packages wm)
-  #:use-module (gnu packages xdisorg)
-  #:use-module (gnu packages brightnessctl)
-  #:use-module (srfi srfi-1)
   #:export (%my-home-packages))
 
+;; specification->package looks packages up by name, so there is no
+;; need to import the (gnu packages ...) module that defines each one.
 (define %my-home-packages
-  (list
-   neovim
-   git
-   i3-wm
-   dmenu
-   brightnessctl
-   htop))
+  (map specification->package
+       '("neovim"
+         "git"
+         "i3-wm"
+         "i3status"
+         "dmenu"
+         "xterm"
+         "brightnessctl"
+         "alsa-utils"
+         "htop")))

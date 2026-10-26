@@ -1,5 +1,7 @@
-;; dotfiles/guix/system/config.scm - SINGLE FILE, NO MODULES
-(use-modules (gnu system)
+;; dotfiles/guix/system/config.scm - single file, no local modules
+
+(use-modules (gnu)
+             (gnu system)
              (gnu system file-systems)
              (gnu system shadow)
              (gnu bootloader)
@@ -12,59 +14,103 @@
              (gnu services networking)
              (gnu system keyboard)
              (gnu packages)
-             (gnu packages admin)
-             (gnu packages base)
-             (gnu packages bash)
-             (gnu packages file)
-             (gnu packages linux)
-             (gnu packages pciutils)
-             (gnu packages pciutils)
-             (gnu packages vim)
-             (gnu packages xorg)
-             (gnu packages wm)
-             (gnu packages brightnessctl)
-             (gnu packages connman)
              (gnu packages shells)
-             (gnu packages xdisorg)
-             (srfi srfi-1)
+             (guix gexp)
              (nongnu packages linux)
              (nongnu system linux-initrd))
 
-;; KERNEL & FIRMWARE
-(define %my-kernel linux)
-(define %my-initrd microcode-initrd)
-(define %my-kernel-arguments '("quiet" "loglevel=3" "mitigations=auto"))
-(define %my-firmware (list linux-firmware))
+;; ---------------------------------------------------------------
+;; kernel and firmware (nonguix)
+;; ---------------------------------------------------------------
 
-;; BOOT
+(define %my-kernel
+  linux)
+
+(define %my-initrd
+  microcode-initrd)
+
+(define %my-kernel-arguments
+  '("quiet"
+    "loglevel=3"))
+
+(define %my-firmware
+  (list linux-firmware))
+
+;; ---------------------------------------------------------------
+;; boot
+;; ---------------------------------------------------------------
+
 (define %my-bootloader
   (bootloader-configuration
-   (bootloader grub-bootloader)
-   (targets '("/dev/nvme0n1"))))
+   (bootloader grub-efi-bootloader)
+   (targets '("/boot/efi"))))
 
 (define %my-file-systems
-  (list (file-system (mount-point "/") (device "/dev/nvme0n1p8") (type "ext4"))
-        (file-system (mount-point "/boot/efi") (device "/dev/nvme0n1p6") (type "vfat"))))
+  (list (file-system
+         (mount-point "/")
+         (device "/dev/nvme0n1p8")
+         (type "ext4"))
+        (file-system
+         (mount-point "/boot/efi")
+         (device "/dev/nvme0n1p6")
+         (type "vfat"))))
 
-;; HARDWARE
-(define %my-hardware-services (list (service udev-service-type)))
+;; ---------------------------------------------------------------
+;; packages
+;;
+;; specification->package looks packages up by name, so we do not
+;; need to guess which (gnu packages ...) module each one lives in.
+;; ---------------------------------------------------------------
 
-;; NETWORKING
-(define %my-networking-services (list (service connman-service-type)))
-
-;; PACKAGES
 (define %my-system-packages
-  (append (list coreutils grep sed gawk findutils util-linux iproute pciutils file
-                which wget curl git zsh xorg-server xf86-video-intel xf86-video-nouveau
-                xf86-input-libinput libinput xinput i3-wm i3status dmenu xinit xterm
-                brightnessctl neovim connman)
-          %base-packages))
+  (append
+   (map specification->package
+        '("coreutils"
+          "grep"
+          "sed"
+          "gawk"
+          "findutils"
+          "util-linux"
+          "iproute2"
+          "pciutils"
+          "file"
+          "which"
+          "wget"
+          "curl"
+          "git"
+          "sudo"
+          "zsh"
+          "alsa-utils"
+          "font-dejavu"
+          "xrandr"
+          "xrdb"
+          "xorg-server"
+          "xf86-video-intel"
+          "xf86-video-nouveau"
+          "xf86-input-libinput"
+          "libinput"
+          "xinput"
+          "i3-wm"
+          "i3status"
+          "dmenu"
+          "xinit"
+          "xterm"
+          "brightnessctl"
+          "neovim"
+          "connman"))
+   %base-packages))
 
-;; TOUCHPAD XORG CONFIG
+;; ---------------------------------------------------------------
+;; touchpad
+;; ---------------------------------------------------------------
+
 (define %my-touchpad-xorg-configuration
   (xorg-configuration
-   (modules (cons* xf86-input-libinput %default-xorg-modules))
-   (extra-config (list "
+   (keyboard-layout (keyboard-layout "us"))
+   (fonts (cons (specification->package "font-dejavu")
+                %default-xorg-fonts))
+   (extra-config
+    (list "
 Section \"InputClass\"
     Identifier \"libinput touchpad catchall\"
     MatchIsTouchpad \"on\"
@@ -78,45 +124,68 @@ Section \"InputClass\"
     Option \"ScrollMethod\" \"twofinger\"
     Option \"DisableWhileTyping\" \"on\"
     Option \"MiddleEmulation\" \"on\"
-    Option \"PalmDetection\" \"on\"
 EndSection
 "))))
 
-;; SERVICES
-(define %my-desktop-services
-  (append (list (service slim-service-type
-                         (slim-configuration
-                          (default-user "arctan")
-                          (auto-login? #f)
-                          (xorg-configuration %my-touchpad-xorg-configuration)))
-                (service elogind-service-type)
-                (service dbus-root-service-type))
-          %base-services))
+;; ---------------------------------------------------------------
+;; services
+;; ---------------------------------------------------------------
 
-;; USERS
+(define %my-services
+  (append
+   (list
+    ;; display manager
+    (service slim-service-type
+             (slim-configuration
+              (default-user "arctan")
+              (auto-login? #f)
+              (auto-login-session "i3")
+              (xorg-configuration %my-touchpad-xorg-configuration)))
+
+    ;; seat / power management
+    (service elogind-service-type)
+
+    ;; system bus and authorization
+    (service dbus-root-service-type)
+    (service polkit-service-type)
+
+    ;; networking
+    (service connman-service-type))
+   %base-services))
+
+;; ---------------------------------------------------------------
+;; users
+;; ---------------------------------------------------------------
+
 (define %my-users
-  (append (list (user-account
-                 (name "arctan")
-                 (group "users")
-                 (supplementary-groups '("wheel" "netdev" "audio" "video" "input"))
-                 (home-directory "/home/arctan")
-                 (shell "/run/current-system/profile/bin/zsh")))
-          %base-user-accounts))
+  (append
+   (list
+    (user-account
+     (name "arctan")
+     (group "users")
+     (supplementary-groups '("wheel" "netdev" "audio" "video" "input"))
+     (home-directory "/home/arctan")
+     (shell (file-append zsh "/bin/zsh"))))
+   %base-user-accounts))
 
-;; OPERATING SYSTEM
+;; ---------------------------------------------------------------
+;; operating system
+;; ---------------------------------------------------------------
+
 (operating-system
- (host-name "guix-btw")
- (timezone "America/Los_Angeles")
- (locale "en_US.utf8")
+  (host-name "guix-btw")
+  (timezone "America/Los_Angeles")
+  (locale "en_US.utf8")
+  (keyboard-layout (keyboard-layout "us"))
 
- (kernel %my-kernel)
- (initrd %my-initrd)
- (kernel-arguments %my-kernel-arguments)
- (firmware %my-firmware)
+  (kernel %my-kernel)
+  (initrd %my-initrd)
+  (kernel-arguments %my-kernel-arguments)
+  (firmware %my-firmware)
 
- (bootloader %my-bootloader)
- (file-systems %my-file-systems)
+  (bootloader %my-bootloader)
+  (file-systems %my-file-systems)
 
- (users %my-users)
- (packages %my-system-packages)
- (services %my-desktop-services))
+  (users %my-users)
+  (packages %my-system-packages)
+  (services %my-services))

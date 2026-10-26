@@ -23,10 +23,10 @@ bindsym $mod+d exec dmenu_run
 bindsym XF86MonBrightnessUp exec brightnessctl set +5%
 bindsym XF86MonBrightnessDown exec brightnessctl set 5%-
 
-# volume (basic)
-bindsym XF86AudioRaiseVolume exec pactl set-sink-volume @DEFAULT_SINK@ +5%
-bindsym XF86AudioLowerVolume exec pactl set-sink-volume @DEFAULT_SINK@ -5%
-bindsym XF86AudioMute exec pactl set-sink-mute @DEFAULT_SINK@ toggle
+# volume (ALSA)
+bindsym XF86AudioRaiseVolume exec amixer -q sset Master 5%+
+bindsym XF86AudioLowerVolume exec amixer -q sset Master 5%-
+bindsym XF86AudioMute exec amixer -q sset Master toggle
 
 # basics
 bindsym $mod+Return exec xterm
@@ -76,5 +76,29 @@ bindsym $mod+e layout toggle split
 
 bar {
     status_command i3status
+}
+"))
+    `(".config/i3status/config"
+      ,(plain-file
+        "i3status.conf"
+        "general {
+    colors = true
+    interval = 5
+}
+
+order += \"disk /\"
+order += \"load\"
+order += \"clock\"
+
+disk \"/\" {
+    format = \"/ %avail\"
+}
+
+load {
+    format = \"%1min\"
+}
+
+clock {
+    format = \"%Y-%m-%d %H:%M\"
 }
 ")))))

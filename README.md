@@ -1,6 +1,12 @@
 # Dotfiles for Guix (i3 + connman + nonguix)
 
-This folder contains a simple, modular Guix System + Home configuration built to be readable (no fancy macros). It is set up for a laptop with Intel integrated graphics + NVIDIA (hybrid), Intel WiFi (AX200/AX211 style), and touchpad click/tap issues addressed.
+Guix System + Guix Home configuration for a laptop with Intel WiFi (AX200/AX211),
+hybrid Intel + NVIDIA graphics, and an i3 desktop.
+
+The two configs are **single files with no local modules**, so there is no
+`GUILE_LOAD_PATH` to set and no "unbound variable" / "no code for module" games.
+Packages are looked up with `specification->package`, so we also do not depend
+on guessing which `(gnu packages ...)` module defines each package.
 
 ## Layout
 
@@ -8,99 +14,116 @@ This folder contains a simple, modular Guix System + Home configuration built to
 dotfiles/
   README.md
   guix/
-    channels.scm        -> put in ~/.config/guix/channels.scm
+    channels.scm        -> copy to ~/.config/guix/channels.scm
     system/
-      config.scm
-      modules/
-        base.scm
-        boot.scm
-        firmware-kernel.scm
-        hardware.scm
-        networking.scm
-        packages.scm
-        services.scm
-        users.scm
-        xorg-touchpad.scm  (touchpad fix)
+      config.scm        -> the whole operating-system
     home/
-      config.scm
-      modules/
-        packages.scm
-        shell-zsh.scm
-        wm-i3.scm
-        nvim.scm
-        xresources.scm
+      config.scm        -> the whole home-environment
 ```
+
+The old `modules/` folders are left in the repo for reference, but the configs
+do not use them anymore.
 
 ## 1) Setup channels (nonguix)
 
-Put `guix/channels.scm` into `~/.config/guix/channels.scm`.
-
-Then pull:
-
 ```bash
+mkdir -p ~/.config/guix
+cp ~/dotfiles/guix/channels.scm ~/.config/guix/channels.scm
 guix pull
 ```
 
-If you want to use nonguix substitutes later, see the nonguix README (has signing key instructions). You don't need them to get started.
+`guix pull` takes a while. Let it finish.
 
-## 2) Edit system configuration
+If you want the nonguix substitute server later, follow the nonguix README
+(signing key instructions). It is not required to boot.
 
-Before reconfiguring, edit the following files:
+## 2) Check the system config
 
-### `guix/system/modules/boot.scm`
-- Replace `/dev/sdX` with your boot disk (e.g. `/dev/nvme0n1` or `/dev/sda`)
-- Replace `PUT-YOUR-ROOT-UUID-HERE` with the UUID of your root partition (`blkid` or `lsblk -f`)
-- Replace `PUT-YOUR-EFI-UUID-HERE` with the UUID of your EFI partition (if using UEFI)
+Everything lives in `guix/system/config.scm`. The values already set are:
 
-### `guix/system/modules/base.scm`
-- `host-name` - change to your hostname
-- `timezone` - change to your timezone (e.g. `America/Los_Angeles`, `Europe/London`)
-- `locale` - change to your locale (e.g. `en_US.utf8`)
+| Setting | Value |
+| --- | --- |
+| hostname | `guix-btw` |
+| timezone | `America/Los_Angeles` |
+| locale | `en_US.utf8` |
+| user | `arctan` (groups: wheel, netdev, audio, video, input) |
+| shell | zsh |
+| root partition | `/dev/nvme0n1p8` (ext4) |
+| EFI partition | `/dev/nvme0n1p6` (vfat, mounted at `/boot/efi`) |
+| bootloader | GRUB **EFI**, target `/boot/efi` |
 
-### `guix/system/modules/users.scm`
-- Change `yourusername` to your actual username
-- Change the comment to your name
-- The shell is set to `zsh` (we install it in packages)
+If any of that changes, edit the matching `define` in that file.
 
-### `guix/system/modules/services.scm`
-- Change `default-user` under slim to your username
+**BIOS vs UEFI:** the config assumes UEFI because you have `/boot/efi`. If the
+machine actually boots in BIOS/legacy mode, change:
+
+```scheme
+(bootloader grub-efi-bootloader)
+(targets '("/boot/efi"))
+```
+
+to:
+
+```scheme
+(bootloader grub-bootloader)
+(targets '("/dev/nvme0n1"))
+```
+
+**Partition paths:** raw paths work, but UUIDs survive hardware changes better.
+If you prefer UUIDs, replace `(device "/dev/nvme0n1p8")` with
+`(device (uuid "YOUR-UUID" 'ext4))`, etc.
+
+**Filesystem type:** the root filesystem is assumed to be `ext4`. If `lsblk -f`
+shows something else, change `(type "ext4")` in the root `file-system` entry
+before reconfiguring.
 
 ## 3) Touchpad fix (already included)
 
-The fix is in `guix/system/modules/xorg-touchpad.scm`. It forces libinput with:
+The `xorg-configuration` in `guix/system/config.scm` forces libinput with:
+
 - `Tapping "on"` (tap to click)
 - `TappingDrag "on"`
 - `ClickMethod "clickfinger"` (good for clickpads)
 - `ScrollMethod "twofinger"`
 - `DisableWhileTyping "on"`
 - `MiddleEmulation "on"`
-- `PalmDetection "on"`
 
-If physical buttons still don't work properly, change `ClickMethod` from `"clickfinger"` to `"buttonareas"` in that file and reconfigure.
+If the physical buttons behave oddly, change `ClickMethod` from
+`"clickfinger"` to `"buttonareas"` and reconfigure.
 
-If you want to debug in a live session: `xinput list` then `xinput list-props <touchpad-id>`. Paste the output if something is still broken and I can tweak it more.
-
-## 4) Reconfigure
-
-Make sure `dotfiles/` is in your home directory or somewhere accessible. Run from that location.
-
-### Aliases (added)
-Once you apply your home config, you get these aliases:
+To debug in a running session:
 
 ```bash
-sysre   # sudo guix system reconfigure $HOME/dotfiles/guix/system/config.scm
-homere  # GUILE_LOAD_PATH=$HOME/dotfiles guix home reconfigure $HOME/dotfiles/guix/home/config.scm
+xinput list
+xinput list-props <touchpad-id>
 ```
 
-### Manual commands
+## 4) Install / reconfigure
+
+System (no load path needed):
+
 ```bash
-sudo guix system reconfigure $HOME/dotfiles/guix/system/config.scm
-GUILE_LOAD_PATH=$HOME/dotfiles guix home reconfigure $HOME/dotfiles/guix/home/config.scm
+sudo guix system reconfigure ~/dotfiles/guix/system/config.scm
+```
+
+Home (no load path needed):
+
+```bash
+guix home reconfigure ~/dotfiles/guix/home/config.scm
+```
+
+After applying the home config you get these zsh aliases:
+
+```bash
+sysre    # sudo guix system reconfigure ~/dotfiles/guix/system/config.scm
+homere   # guix home reconfigure ~/dotfiles/guix/home/config.scm
 ```
 
 ## 5) First boot notes
 
-- **WiFi**: Intel AX200/AX210/AX211 are covered by `linux-firmware`. Use `connmanctl` to connect. Example:
+- **WiFi**: Intel AX200/AX210/AX211 firmware comes from `linux-firmware`.
+  Connect with `connmanctl`:
+
   ```bash
   connmanctl
   > enable wifi
@@ -109,16 +132,39 @@ GUILE_LOAD_PATH=$HOME/dotfiles guix home reconfigure $HOME/dotfiles/guix/home/co
   > agent on
   > connect wifi_<hash>_<ssid>_managed_psk
   ```
-  Your user needs to be in `netdev` group (already added in users.scm).
-- **Brightness**: Use `brightnessctl`. In i3, `XF86MonBrightnessUp`/`XF86MonBrightnessDown` are bound. If your keys don't work, try `brightnessctl set +10%` manually.
-- **Editor**: `nvim` with a very basic config (line numbers, 4 spaces). Edit `~/.config/nvim/init.lua` to extend it.
-- **Window manager**: i3 with `Mod4+d` for dmenu, `Mod4+Return` for xterm. Edit `~/.config/i3/config`.
-- **Shell**: `zsh` is installed. After first login you can change it with `chsh -s $(which zsh)`.
-- **Intel+NVIDIA hybrid**: This config uses modesetting/xf86-video-intel + nouveau. If you want the proprietary NVIDIA driver, use `nonguix-transformation-nvidia`. I can help set that up, but it needs extra care.
-- **vmd/Intel Volume Management Device**: Usually handled by the kernel. No extra config is needed here.
-- **Debugging touchpad**: `xinput list` and `xinput list-props` are available (xinput added to packages).
+
+  Your user is in the `netdev` group.
+- **Brightness**: `brightnessctl`. The i3 config binds the brightness keys.
+  Manual test: `brightnessctl set +10%`.
+- **Audio**: ALSA only (`alsa-utils`). The i3 volume keys use `amixer`.
+  Manual test: `alsamixer`.
+- **Editor**: `nvim` with a small `init.lua` (line numbers, 4 spaces).
+- **Window manager**: i3. `Mod4+d` = dmenu, `Mod4+Return` = xterm.
+- **Shell**: zsh is the login shell.
+- **Intel + NVIDIA hybrid**: this config installs the Intel and nouveau Xorg
+  drivers and lets Xorg pick the right one. For the proprietary NVIDIA driver
+  use the nonguix `nonguix-transformation-nvidia` helper. Ask before enabling
+  it.
+- **Intel VMD**: handled by the kernel; no extra configuration here.
+- **WM session**: slim is configured with `auto-login-session "i3"`, so it
+  starts i3 even if no i3 `.desktop` session file is installed. Log in as
+  `arctan`; you do not need to pick a session manually.
+- **X resources**: the home config installs `~/.Xresources` and the i3 config
+  runs `xrdb -merge ~/.Xresources` on startup/reload.
+
+## Checks before rebooting
+
+- `sudo guix system build ~/dotfiles/guix/system/config.scm` should finish
+  without errors. If it fails, the error names the exact file/field.
+- `guix home build ~/dotfiles/guix/home/config.scm` should also finish.
+- Keep the previous system generation in GRUB. If the new one misbehaves,
+  pick the old generation at boot.
 
 ## Tips
-- Keep this modular. If you want to add something, make a new module in `modules/` and import it.
-- This is intentionally KISS - no unnecessary abstractions.
-- If reconfigure fails, read the error. Most of the time it's wrong UUIDs or username mismatches.
+
+- If `guix system reconfigure` complains about `nongnu` modules, run
+  `guix pull` again with `~/.config/guix/channels.scm` in place.
+- If a `specification->package` name is wrong, the error names the missing
+  package. Add/remove the string in the package list.
+- If the touchpad still misbehaves, paste `xinput list-props` output and the
+  `ClickMethod` can be adjusted.
