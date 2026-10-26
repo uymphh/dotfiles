@@ -18,7 +18,7 @@
              (gnu packages file)
              (gnu packages linux)
              (gnu packages pciutils)
-             (gnu packages usbutils)
+             (gnu packages pciutils)
              (gnu packages vim)
              (gnu packages xorg)
              (gnu packages wm)
@@ -54,7 +54,7 @@
 
 ;; PACKAGES
 (define %my-system-packages
-  (append (list coreutils grep sed gawk findutils util-linux iproute pciutils usbutils file
+  (append (list coreutils grep sed gawk findutils util-linux iproute pciutils file
                 which wget curl git zsh xorg-server xf86-video-intel xf86-video-nouveau
                 xf86-input-libinput libinput xinput i3-wm i3status dmenu xinit xterm
                 brightnessctl neovim connman)
