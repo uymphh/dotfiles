@@ -87,7 +87,7 @@
           "git"
           "sudo"
           "alsa-utils"
-          "font-dejavu"
+          "font-jetbrains-mono"
           "xrandr"
           "xrdb"
           "xorg-server"
@@ -123,11 +123,8 @@
 (define %my-touchpad-xorg-configuration
   (xorg-configuration
    (keyboard-layout (keyboard-layout "us"))
-   ;; Xorg uses these verbatim as FontPath entries, so point at the
-   ;; directory the fonts actually live in, not the package root.
-   (fonts (cons (file-append (specification->package "font-dejavu")
-                             "/share/fonts/truetype")
-                %default-xorg-fonts))
+   ;; TTF fonts reach Xft through fontconfig, so they do not belong in the
+   ;; core X FontPath; keep the default bitmap fonts for xterm.
    (extra-config
     (list "
 Section \"InputClass\"

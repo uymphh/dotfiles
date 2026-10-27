@@ -200,6 +200,12 @@ dmenu is themed on the command line (`-nb/-nf/-sb/-sf/-fn`), so it matches the
 bar and windows without an extra config file. rofi is still installed and
 themed, but it is no longer the primary launcher.
 
+Every font is JetBrains Mono: i3 and i3bar (`pango:JetBrains Mono`), dmenu
+(`-fn`), kitty, rofi, dunst, the GTK font, and xterm. `font-jetbrains-mono` is
+installed in both the system profile and the home profile, so the font is
+available even before `guix home` is deployed. If something falls back to a
+default font, run `fc-cache -f` and check `fc-list | grep -i jetbrains`.
+
 ### Browser and terminal details
 
 - IceCat uses a dedicated profile at `~/.config/icecat` so its `user.js`
@@ -210,11 +216,11 @@ themed, but it is no longer the primary launcher.
   different.
 - `~/.config/mimeapps.list` makes IceCat the default handler for HTTP, HTTPS,
   and HTML, which is what `xdg-open` and desktop files use.
-- Kitty is configured with DejaVu Sans Mono, 12px window padding, 0.92
+- Kitty is configured with JetBrains Mono, 12px window padding, 0.92
   background opacity, a beam cursor, 10k scrollback, powerline tabs, and a dark
   16-color palette.
 - dmenu is styled inline from the i3 config (Catppuccin background, blue
-  selection, DejaVu Sans Mono 11). Edit the `bindsym` lines to change it.
+  selection, JetBrains Mono 11). Edit the `bindsym` lines to change it.
 - Rofi is themed in `~/.config/rofi/config.rasi` (Catppuccin-ish colors,
   rounded border, icon rows). Rofi 2.0 no longer reads Xresources, so
   `~/.Xresources` is only used for xterm and Xft settings.
@@ -356,6 +362,13 @@ use `sudo reboot` or `loginctl poweroff` for normal power control.
 - **No notifications**: check that `dunst` is running (`pgrep dunst`) and that
   `~/.xsession` exists and is executable. Test with
   `notify-send 'test' 'hello'`.
+- **i3bar is missing or shows an error**: run
+  `i3status -c ~/.config/i3status/config` in a terminal; it prints the exact
+  config problem. A missing `i3status` binary or a bad block is the usual
+  cause. After fixing it, `Mod4+Shift+R` restarts i3.
+- **Fonts are not JetBrains Mono**: run `fc-list | grep -i jetbrains`. If that
+  is empty, the font package was not deployed or the cache is stale; run
+  `fc-cache -f` and re-run `guix home reconfigure` as `arctan`.
 - **Rofi looks wrong or will not start**: run `rofi -show drun` from a terminal
   and read the error. Theme problems point at `~/.config/rofi/config.rasi`;
   rename that file temporarily to fall back to the built-in theme.

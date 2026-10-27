@@ -59,7 +59,7 @@ export MOZ_ENABLE_WAYLAND=0
 set $term kitty
 set $browser icecat
 
-font pango:DejaVu Sans Mono 10
+font pango:JetBrains Mono 10
 
 # X resources (xterm font, Xft)
 exec_always --no-startup-id xrdb -merge ~/.Xresources
@@ -72,8 +72,8 @@ exec --no-startup-id picom --config ~/.config/picom/picom.conf
 exec --no-startup-id dunst
 
 # launcher: dmenu is the main launcher, rofi is the extra
-bindsym $mod+d exec --no-startup-id dmenu_run -i -nb '#1e1e2e' -nf '#cdd6f4' -sb '#89b4fa' -sf '#1e1e2e' -fn 'DejaVu Sans Mono:size=11' -p 'run:'
-bindsym $mod+p exec --no-startup-id dmenu_run -i -nb '#1e1e2e' -nf '#cdd6f4' -sb '#89b4fa' -sf '#1e1e2e' -fn 'DejaVu Sans Mono:size=11' -p 'run:'
+bindsym $mod+d exec --no-startup-id dmenu_run -i -nb '#1e1e2e' -nf '#cdd6f4' -sb '#89b4fa' -sf '#1e1e2e' -fn 'JetBrains Mono:size=11' -p 'run:'
+bindsym $mod+p exec --no-startup-id dmenu_run -i -nb '#1e1e2e' -nf '#cdd6f4' -sb '#89b4fa' -sf '#1e1e2e' -fn 'JetBrains Mono:size=11' -p 'run:'
 bindsym $mod+Shift+d exec --no-startup-id rofi -show drun
 
 # terminal and browser
@@ -170,7 +170,7 @@ bar {
     position top
     height 28
     tray_output none
-    font pango:DejaVu Sans Mono 10
+    font pango:JetBrains Mono 10
     colors {
         background #1e1e2e
         statusline #cdd6f4
@@ -243,7 +243,7 @@ tztime local {
 (define %kitty-config
   (plain-file
    "kitty.conf"
-   "font_family DejaVu Sans Mono
+   "font_family JetBrains Mono
 font_size 11
 bold_font auto
 italic_font auto
@@ -302,7 +302,7 @@ copy_on_select no
   (plain-file
    "config.rasi"
    "configuration {
-    font: \"DejaVu Sans Mono 11\";
+    font: \"JetBrains Mono 11\";
     show-icons: true;
     icon-theme: \"Adwaita\";
     terminal: \"kitty\";
@@ -392,7 +392,7 @@ frame-opacity = 0.90;
   (plain-file
    "dunstrc"
    "[global]
-    font = DejaVu Sans Mono 10
+    font = JetBrains Mono 10
     frame_width = 2
     frame_color = \"#89b4fa\"
     separator_color = frame
@@ -493,7 +493,7 @@ x-scheme-handler/unknown=icecat.desktop
    "[Settings]
 gtk-theme-name=Adwaita
 gtk-icon-theme-name=Adwaita
-gtk-font-name=DejaVu Sans 10
+gtk-font-name=JetBrains Mono 10
 gtk-application-prefer-dark-theme=1
 "))
 
@@ -503,7 +503,7 @@ gtk-application-prefer-dark-theme=1
    "Xft.antialias: true
 Xft.hinting: true
 Xft.rgba: rgb
-xterm*faceName: DejaVu Sans Mono
+xterm*faceName: JetBrains Mono
 xterm*faceSize: 11
 xterm*scrollBar: false
 "))
@@ -540,6 +540,7 @@ vim.opt.updatetime = 50
  (packages
   (map specification->package
        '("neovim"
+         "font-jetbrains-mono"
          "git"
          "i3-wm"
          "i3status"
@@ -571,11 +572,16 @@ vim.opt.updatetime = 50
              (bashrc (list %bashrc))
              (aliases '())))
 
-   (service home-environment-variables-service-type
-            `(("EDITOR" . "nvim")
-              ("VISUAL" . "nvim")
-              ("TERMINAL" . "kitty")
-              ("BROWSER" . "icecat")))
+   ;; This service type is essential: `home-environment' already
+   ;; instantiates it, so extend it instead of adding a second instance
+   ;; (that would fail with "more than one target service").
+   (simple-service
+    'env-vars
+    home-environment-variables-service-type
+    '(("EDITOR" . "nvim")
+      ("VISUAL" . "nvim")
+      ("TERMINAL" . "kitty")
+      ("BROWSER" . "icecat")))
 
    (simple-service
     'i3-config
