@@ -210,9 +210,9 @@ themed, but it is no longer the primary launcher.
   different.
 - `~/.config/mimeapps.list` makes IceCat the default handler for HTTP, HTTPS,
   and HTML, which is what `xdg-open` and desktop files use.
-- Kitty is configured with DejaVu Sans Mono, 12 pt padding, 0.92 background
-  opacity, a beam cursor, 10k scrollback, powerline tabs, and a dark 16-color
-  palette.
+- Kitty is configured with DejaVu Sans Mono, 12px window padding, 0.92
+  background opacity, a beam cursor, 10k scrollback, powerline tabs, and a dark
+  16-color palette.
 - dmenu is styled inline from the i3 config (Catppuccin background, blue
   selection, DejaVu Sans Mono 11). Edit the `bindsym` lines to change it.
 - Rofi is themed in `~/.config/rofi/config.rasi` (Catppuccin-ish colors,

@@ -116,7 +116,10 @@
 (define %my-touchpad-xorg-configuration
   (xorg-configuration
    (keyboard-layout (keyboard-layout "us"))
-   (fonts (cons (specification->package "font-dejavu")
+   ;; Xorg uses these verbatim as FontPath entries, so point at the
+   ;; directory the fonts actually live in, not the package root.
+   (fonts (cons (file-append (specification->package "font-dejavu")
+                             "/share/fonts/truetype")
                 %default-xorg-fonts))
    (extra-config
     (list "
