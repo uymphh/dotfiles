@@ -11,15 +11,41 @@
 ;; shell
 ;; ---------------------------------------------------------------
 
-(define %zshrc
+(define %bashrc
   (plain-file
-   "zshrc"
-   "export PATH=$HOME/.local/bin:$PATH
-alias ll='ls -la'
+   "bashrc"
+   "# ~/.bashrc - bash setup for the i3 rice.
+
+# PATH: privileged helpers first, then local/home/system profiles.
+export PATH=\"/run/privileged/bin:$HOME/.local/bin:$HOME/.guix-home/profile/bin:$HOME/.guix-profile/bin:/run/current-system/profile/bin:/run/current-system/profile/sbin:$PATH\"
+
+# History.
+HISTSIZE=10000
+HISTFILESIZE=20000
+HISTCONTROL=ignoreboth
+shopt -s histappend checkwinsize
+
+# Prompt: user@host in blue, directory in peach, then $ or #.
+PS1='\\[\\e[1;38;5;117m\\]\\u@\\h\\[\\e[0m\\] \\[\\e[38;5;180m\\]\\w\\[\\e[0m\\] \\$ '
+
+# Aliases.
+alias ls='ls --color=auto'
+alias ll='ls -lah --color=auto'
+alias la='ls -A --color=auto'
+alias grep='grep --color=auto'
 alias vim='nvim'
 alias sysre='sudo guix system reconfigure $HOME/dotfiles/guix/system/config.scm'
 alias homere='guix home reconfigure $HOME/dotfiles/guix/home/config.scm'
-PROMPT='%F{green}%n@%m%f:%F{blue}%~%f$ '
+alias wifi='connmanctl'
+
+# Environment used by i3 children and terminal apps.
+export EDITOR=nvim
+export VISUAL=nvim
+export TERMINAL=kitty
+export BROWSER=icecat
+export XDG_CURRENT_DESKTOP=i3
+export XDG_SESSION_TYPE=x11
+export MOZ_ENABLE_WAYLAND=0
 "))
 
 ;; ---------------------------------------------------------------
@@ -35,7 +61,7 @@ set $browser icecat
 
 font pango:DejaVu Sans Mono 10
 
-# X resources (xterm font)
+# X resources (xterm font, Xft)
 exec_always --no-startup-id xrdb -merge ~/.Xresources
 
 # wallpaper
@@ -45,9 +71,10 @@ exec_always --no-startup-id feh --bg-fill ~/.local/share/wallpapers/guix-dark.pn
 exec --no-startup-id picom --config ~/.config/picom/picom.conf
 exec --no-startup-id dunst
 
-# launcher
-bindsym $mod+d exec rofi -show drun
-bindsym $mod+Shift+d exec dmenu_run
+# launcher: dmenu is the main launcher, rofi is the extra
+bindsym $mod+d exec --no-startup-id dmenu_run -i -nb '#1e1e2e' -nf '#cdd6f4' -sb '#89b4fa' -sf '#1e1e2e' -fn 'DejaVu Sans Mono:size=11' -p 'run:'
+bindsym $mod+p exec --no-startup-id dmenu_run -i -nb '#1e1e2e' -nf '#cdd6f4' -sb '#89b4fa' -sf '#1e1e2e' -fn 'DejaVu Sans Mono:size=11' -p 'run:'
+bindsym $mod+Shift+d exec --no-startup-id rofi -show drun
 
 # terminal and browser
 bindsym $mod+Return exec $term
@@ -55,13 +82,14 @@ bindsym $mod+Shift+Return exec xterm
 bindsym $mod+Shift+b exec $browser --profile ~/.config/icecat
 
 # brightness
-bindsym XF86MonBrightnessUp exec brightnessctl set +5%
-bindsym XF86MonBrightnessDown exec brightnessctl set 5%-
+bindsym XF86MonBrightnessUp exec --no-startup-id brightnessctl set +5%
+bindsym XF86MonBrightnessDown exec --no-startup-id brightnessctl set 5%-
 
 # volume (ALSA)
-bindsym XF86AudioRaiseVolume exec amixer -q sset Master 5%+
-bindsym XF86AudioLowerVolume exec amixer -q sset Master 5%-
-bindsym XF86AudioMute exec amixer -q sset Master toggle
+bindsym XF86AudioRaiseVolume exec --no-startup-id amixer -q sset Master 5%+
+bindsym XF86AudioLowerVolume exec --no-startup-id amixer -q sset Master 5%-
+bindsym XF86AudioMute exec --no-startup-id amixer -q sset Master toggle
+bindsym XF86AudioMicMute exec --no-startup-id amixer -q sset Capture toggle
 
 # windows
 bindsym $mod+Shift+q kill
@@ -138,8 +166,9 @@ client.placeholder      #1e1e2e #1e1e2e #cdd6f4 #1e1e2e #1e1e2e
 client.background       #1e1e2e
 
 bar {
-    status_command i3status
+    status_command i3status -c ~/.config/i3status/config
     position top
+    height 28
     tray_output none
     font pango:DejaVu Sans Mono 10
     colors {
@@ -168,18 +197,23 @@ mode \"resize\" {
    "i3status.conf"
    "general {
     colors = true
-    interval = 3
+    interval = 2
     color_good = \"#a6e3a1\"
     color_degraded = \"#f9e2af\"
     color_bad = \"#f38ba8\"
 }
 
+order += \"wireless _first_\"
 order += \"battery all\"
 order += \"cpu_usage\"
 order += \"memory\"
 order += \"disk /\"
-order += \"load\"
 order += \"tztime local\"
+
+wireless _first_ {
+    format_up = \"wifi %quality\"
+    format_down = \"wifi off\"
+}
 
 battery all {
     format = \"batt %percentage\"
@@ -197,12 +231,8 @@ disk \"/\" {
     format = \"disk %avail\"
 }
 
-load {
-    format = \"load %1min\"
-}
-
 tztime local {
-    format = \"%Y-%m-%d %H:%M\"
+    format = \"%a %d %b  %H:%M\"
 }
 "))
 
@@ -220,9 +250,11 @@ italic_font auto
 
 cursor_shape beam
 cursor_blink_interval 0.5
+cursor_text_color #1e1e2e
 scrollback_lines 10000
 enable_audio_bell no
-window_padding_width 10
+mouse_hide_wait 2.0
+window_padding_width 12
 background_opacity 0.92
 
 foreground #cdd6f4
@@ -529,9 +561,15 @@ vim.opt.updatetime = 50
          "xdg-utils")))
  (services
   (list
-   (service home-zsh-service-type
-            (home-zsh-configuration
-             (zshrc (list %zshrc))))
+   ;; bash is the login shell.  /etc/profile already provides the Guix
+   ;; defaults on Guix System, so we turn guix-defaults? off and keep
+   ;; only our own .bashrc (the default one returns early for
+   ;; non-interactive login shells, which is how the desktop starts).
+   (service home-bash-service-type
+            (home-bash-configuration
+             (guix-defaults? #f)
+             (bashrc (list %bashrc))
+             (aliases '())))
 
    (service home-environment-variables-service-type
             `(("EDITOR" . "nvim")

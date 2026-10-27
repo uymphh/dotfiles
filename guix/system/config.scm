@@ -14,7 +14,7 @@
              (gnu services networking)
              (gnu system keyboard)
              (gnu packages)
-             (gnu packages shells)
+             (gnu packages bash)
              (guix gexp)
              (nongnu packages linux)
              (nongnu system linux-initrd))
@@ -79,7 +79,6 @@
           "curl"
           "git"
           "sudo"
-          "zsh"
           "alsa-utils"
           "font-dejavu"
           "xrandr"
@@ -159,8 +158,17 @@ EndSection
     (service dbus-root-service-type)
     (service polkit-service-type)
 
-    ;; networking
-    (service connman-service-type))
+    ;; wireless: ConnMan 2.x talks to wpa_supplicant over D-Bus, so the
+    ;; supplicant has to be up before connman starts.  Without this,
+    ;; "connmanctl enable wifi" works but "scan wifi" fails.
+    (service wpa-supplicant-service-type)
+    (service connman-service-type
+             (connman-configuration
+              (shepherd-requirement '(wpa-supplicant))
+              (general-configuration
+               (connman-general-configuration
+                (background-scanning? #t)
+                (regulatory-domain-follows-timezone? #t))))))
    ;; Add brightnessctl's udev rule so the media keys work without root.
    (modify-services %base-services
      (udev-service-type config =>
@@ -181,7 +189,7 @@ EndSection
      (group "users")
      (supplementary-groups '("wheel" "netdev" "audio" "video" "input"))
      (home-directory "/home/arctan")
-     (shell (file-append zsh "/bin/zsh"))))
+     (shell (file-append bash "/bin/bash"))))
    %base-user-accounts))
 
 ;; ---------------------------------------------------------------

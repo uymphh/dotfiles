@@ -49,10 +49,11 @@ Everything lives in `guix/system/config.scm`. The values already set are:
 | timezone | `America/Los_Angeles` |
 | locale | `en_US.utf8` |
 | user | `arctan` (groups: wheel, netdev, audio, video, input) |
-| shell | zsh |
+| shell | bash |
 | root partition | `/dev/nvme0n1p8` (ext4) |
 | EFI partition | `/dev/nvme0n1p6` (vfat, mounted at `/boot/efi`) |
 | bootloader | GRUB **EFI**, target `/boot/efi` |
+| WiFi | ConnMan + `wpa_supplicant` (D-Bus mode) |
 
 If any of that changes, edit the matching `define` in that file.
 
@@ -122,8 +123,13 @@ Home (no load path needed):
 guix home reconfigure ~/dotfiles/guix/home/config.scm
 ```
 
+If Guix Home reports that `~/.bashrc` or `~/.bash_profile` already exists and
+is not managed by Guix Home, move the old file aside once
+(`mv ~/.bashrc ~/.bashrc.bak`) and rerun. Guix Home only manages files it
+created itself.
+
 The first reconfigure downloads a lot, including IceCat. After applying the
-home config you get these zsh aliases:
+home config you get these bash aliases:
 
 ```bash
 sysre    # sudo guix system reconfigure ~/dotfiles/guix/system/config.scm
@@ -137,8 +143,8 @@ The desktop is built around:
 | Purpose | Program | Notes |
 | --- | --- | --- |
 | browser | `icecat` | GNU IceCat, a free-software Firefox derivative |
-| terminal | `kitty` | GPU terminal, Catppuccin-ish palette |
-| launcher | `rofi` | `rofi -show drun`, dmenu kept as fallback |
+| terminal | `kitty` | GPU terminal, Catppuccin-ish palette, powerline tabs |
+| launcher | `dmenu` | riced `dmenu_run` on `Mod4+D`/`Mod4+P`; rofi is the extra |
 | compositor | `picom` | shadows/fading, starts from i3 |
 | wallpaper | `feh` | `wallpapers/guix-dark.png` |
 | notifications | `dunst` | started from i3 inside a D-Bus session |
@@ -150,6 +156,8 @@ profile PATH is not loaded for some reason.
 Installed config files:
 
 ```text
+~/.bashrc
+~/.bash_profile
 ~/.config/i3/config
 ~/.config/i3status/config
 ~/.config/kitty/kitty.conf
@@ -172,16 +180,25 @@ Installed config files:
 | `Mod4+Return` | kitty |
 | `Mod4+Shift+Return` | xterm fallback |
 | `Mod4+Shift+B` | IceCat |
-| `Mod4+D` | rofi application launcher |
-| `Mod4+Shift+D` | dmenu fallback |
+| `Mod4+D` | riced `dmenu_run` launcher |
+| `Mod4+P` | riced `dmenu_run` launcher |
+| `Mod4+Shift+D` | rofi application launcher |
 | `Mod4+R` | resize mode (`h/j/k/l`, then `Return` or `Escape`) |
 | `Mod4+Shift+C` | reload i3 |
 | `Mod4+Shift+R` | restart i3 |
 | `Mod4+Shift+Q` | close window |
 | `Mod4+Shift+E` | exit i3 (confirmation) |
+| `XF86AudioRaiseVolume` / `LowerVolume` | `amixer` master volume |
+| `XF86AudioMute` / `XF86AudioMicMute` | mute output / microphone |
+| `XF86MonBrightnessUp` / `Down` | `brightnessctl` |
 
 The i3 config uses gaps (`inner 8`, `outer 4`), pixel borders, Catppuccin-ish
-colors, and an i3bar with battery, CPU, memory, disk, load, and clock modules.
+colors, and an i3bar fed by `i3status` with wireless, battery, CPU, memory,
+disk, and clock modules. The bar is 28 px tall with the same palette.
+
+dmenu is themed on the command line (`-nb/-nf/-sb/-sf/-fn`), so it matches the
+bar and windows without an extra config file. rofi is still installed and
+themed, but it is no longer the primary launcher.
 
 ### Browser and terminal details
 
@@ -193,8 +210,11 @@ colors, and an i3bar with battery, CPU, memory, disk, load, and clock modules.
   different.
 - `~/.config/mimeapps.list` makes IceCat the default handler for HTTP, HTTPS,
   and HTML, which is what `xdg-open` and desktop files use.
-- Kitty is configured with DejaVu Sans Mono, 10 px padding, 0.92 background
-  opacity, 10k scrollback, and a dark 16-color palette.
+- Kitty is configured with DejaVu Sans Mono, 12 pt padding, 0.92 background
+  opacity, a beam cursor, 10k scrollback, powerline tabs, and a dark 16-color
+  palette.
+- dmenu is styled inline from the i3 config (Catppuccin background, blue
+  selection, DejaVu Sans Mono 11). Edit the `bindsym` lines to change it.
 - Rofi is themed in `~/.config/rofi/config.rasi` (Catppuccin-ish colors,
   rounded border, icon rows). Rofi 2.0 no longer reads Xresources, so
   `~/.Xresources` is only used for xterm and Xft settings.
@@ -217,10 +237,39 @@ integration need. If this causes trouble on your machine, comment out the
 `dbus-session` service in `guix/home/config.scm` and remove `~/.xsession`; slim
 will fall back to starting `i3` directly.
 
+### Shell and PATH (bash)
+
+The login shell is **bash**. Guix Home installs `~/.bashrc` plus a generated
+`~/.bash_profile` that sources `~/.profile` and then `~/.bashrc`. The `.bashrc`
+sets an explicit PATH:
+
+```sh
+/run/privileged/bin
+$HOME/.local/bin
+$HOME/.guix-home/profile/bin
+$HOME/.guix-profile/bin
+/run/current-system/profile/bin
+/run/current-system/profile/sbin
+```
+
+That matters because SLIM starts the desktop by running `~/.xsession` through
+the login shell. If the login shell loses those directories, the whole i3
+session loses `sudo`, `herd`, `reboot`, and friends, not just the terminal.
+
+`sudo` is in `/run/privileged/bin`; the Shepherd clients (`herd`, `reboot`,
+`shutdown`) come from the system profile. They need root, so `sudo herd status`
+is the correct form. Shepherd's `shutdown` is not the SysV `shutdown -h now`;
+use `sudo reboot` or `loginctl poweroff` for normal power control.
+
 ## 6) First boot notes
 
 - **WiFi**: Intel AX200/AX210/AX211 firmware comes from `linux-firmware`.
-  Connect with `connmanctl`:
+  ConnMan 2.x does not drive the card itself: it talks to `wpa_supplicant`
+  over D-Bus. The system config therefore starts
+  `(service wpa-supplicant-service-type)` and makes ConnMan depend on
+  `'(wpa-supplicant)`. `iwd` is deliberately not used.
+
+  Connect with `connmanctl` (interactive or one command at a time):
 
   ```bash
   connmanctl
@@ -232,13 +281,30 @@ will fall back to starting `i3` directly.
   ```
 
   Your user is in the `netdev` group.
+
+  If `enable wifi` works but `scan wifi` errors, check the daemons and the
+  radio before touching the config:
+
+  ```bash
+  sudo herd status wpa-supplicant
+  sudo herd status connman
+  connmanctl technologies
+  rfkill list
+  dmesg | grep -i -E 'firmware|iwlwifi'
+  ```
+
+  Both status lines should say `running`. If `wpa-supplicant` is not running,
+  the ConnMan WiFi plugin has nothing to scan with; reconfigure the system and
+  check the order in `guix/system/config.scm`. If `rfkill` shows the device
+  soft-blocked, run `sudo rfkill unblock wifi`.
 - **Brightness**: `brightnessctl`. The i3 config binds the brightness keys.
   Manual test: `brightnessctl set +10%`.
 - **Audio**: ALSA only (`alsa-utils`). The i3 volume keys use `amixer`.
   Manual test: `alsamixer`.
 - **Editor**: `nvim` with a small `init.lua` (line numbers, 4 spaces).
 - **Window manager**: i3. See the keybinding table above.
-- **Shell**: zsh is the login shell.
+- **Shell**: bash is the login shell. Your prompt, PATH, and aliases come from
+  `~/.bashrc`; `sysre`, `homere`, and `wifi` are defined there.
 - **Intel + NVIDIA hybrid**: this config installs the Intel and nouveau Xorg
   drivers and lets Xorg pick the right one. It does **not** enable the
   proprietary NVIDIA driver. If you want that later, use nonguix's
@@ -261,6 +327,19 @@ will fall back to starting `i3` directly.
 
 ## Troubleshooting
 
+- **`sudo` / `herd` / `reboot` says "command not found"**: the shell is not
+  getting the Guix PATH. Check `echo $PATH`; it must contain
+  `/run/privileged/bin` and `/run/current-system/profile/sbin`. Run
+  `source ~/.bashrc`, or start a fresh login shell with `bash --login`. If it
+  persists, confirm the account really uses bash: `getent passwd arctan` should
+  end in `/bin/bash`, and `~/.bash_profile` should exist. The desktop inherits
+  this PATH because SLIM runs `~/.xsession` through the login shell.
+- **`reboot` / `shutdown` errors**: these are root-only Shepherd clients, and
+  Shepherd's `shutdown` does not accept `-h now`. Use `sudo reboot` or
+  `loginctl poweroff`. `sudo herd status` is the right way to inspect services.
+- **WiFi `scan wifi` fails**: run the `herd`/`connmanctl technologies`/`rfkill`
+  checks in the WiFi first-boot notes. The usual cause is `wpa-supplicant` not
+  running, or a soft-blocked radio.
 - **Kitty will not start**: try `Mod4+Shift+Return` for xterm, then run `kitty`
   from a terminal to see the error. GPU/driver issues are the usual cause.
 - **No wallpaper**: run
