@@ -310,7 +310,9 @@ use `sudo reboot` or `loginctl poweroff` for normal power control.
   proprietary NVIDIA driver. If you want that later, use nonguix's
   `nongnu/services/nvidia.scm` (`nvidia-service-type`) or its
   `etc/manifests/nonguix-nvidia` manifest; ask before enabling it.
-- **Intel VMD**: handled by the kernel; no extra configuration here.
+- **Intel VMD**: if the NVMe drive sits behind Intel VMD, the `vmd` kernel
+  module must be loaded before the root device appears, so it is prepended to
+  `initrd-modules`. This is harmless on machines without VMD.
 - **WM session**: slim is configured with `auto-login-session "i3"`, and the
   home config installs `~/.xsession`, which starts i3 inside `dbus-run-session`.
   Log in as `arctan`; you do not need to pick a session manually.
@@ -334,6 +336,10 @@ use `sudo reboot` or `loginctl poweroff` for normal power control.
   persists, confirm the account really uses bash: `getent passwd arctan` should
   end in `/bin/bash`, and `~/.bash_profile` should exist. The desktop inherits
   this PATH because SLIM runs `~/.xsession` through the login shell.
+- **`sudo: unable to allocate pty` / `sudo: no tty present`**: `/dev/pts` is
+  not mounted. The system config must include `%base-file-systems` (it does
+  now); reconfigure the system and reboot so `devpts` is mounted. Verify with
+  `mount | grep devpts` afterwards.
 - **`reboot` / `shutdown` errors**: these are root-only Shepherd clients, and
   Shepherd's `shutdown` does not accept `-h now`. Use `sudo reboot` or
   `loginctl poweroff`. `sudo herd status` is the right way to inspect services.

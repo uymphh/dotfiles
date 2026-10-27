@@ -13,6 +13,7 @@
              (gnu services desktop)
              (gnu services networking)
              (gnu system keyboard)
+             (gnu system linux-initrd)
              (gnu packages)
              (gnu packages bash)
              (guix gexp)
@@ -46,14 +47,20 @@
    (targets '("/boot/efi"))))
 
 (define %my-file-systems
-  (list (file-system
-         (mount-point "/")
-         (device "/dev/nvme0n1p8")
-         (type "ext4"))
-        (file-system
-         (mount-point "/boot/efi")
-         (device "/dev/nvme0n1p6")
-         (type "vfat"))))
+  ;; %base-file-systems is what provides /dev/pts (devpts), /dev/shm,
+  ;; efivarfs and the read-only /gnu/store.  Without /dev/pts, anything
+  ;; that allocates a pty fails -- including sudo, whose default policy
+  ;; uses use_pty ("sudo: unable to allocate pty: No such device").
+  (append
+   (list (file-system
+          (mount-point "/")
+          (device "/dev/nvme0n1p8")
+          (type "ext4"))
+         (file-system
+          (mount-point "/boot/efi")
+          (device "/dev/nvme0n1p6")
+          (type "vfat")))
+   %base-file-systems))
 
 ;; ---------------------------------------------------------------
 ;; packages
@@ -207,6 +214,10 @@ EndSection
 
   (kernel %my-kernel)
   (initrd %my-initrd)
+  ;; NVMe behind Intel VMD only appears once the vmd module is loaded, so
+  ;; it has to be in the initrd to find the root file system.  Keep the
+  ;; stock module list and prepend it.
+  (initrd-modules (cons* "vmd" (base-initrd-modules %my-kernel)))
   (kernel-arguments %my-kernel-arguments)
   (firmware %my-firmware)
 
