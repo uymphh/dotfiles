@@ -17,6 +17,8 @@
              (gnu packages)
              (gnu packages bash)
              (guix gexp)
+             (guix utils)
+             (srfi srfi-1)
              (nongnu packages linux)
              (nongnu system linux-initrd))
 
@@ -44,7 +46,19 @@
 (define %my-bootloader
   (bootloader-configuration
    (bootloader grub-efi-bootloader)
-   (targets '("/boot/efi"))))
+   (targets '("/boot/efi"))
+   (menu-entries
+    (list
+     ;; Windows (UEFI) - chainload from EFI partition
+     (menu-entry
+      (label "Windows Boot Manager")
+      (device (file-system-device (find (lambda (fs)
+                                          (string=? (file-system-mount-point fs)
+                                                    "/boot/efi"))
+                                        %my-file-systems)))
+      (device-mount-point "/boot/efi")
+      (chain-loader "/efi/Microsoft/Boot/Bootmgfw.efi"))))
+   (timeout 5)))
 
 (define %my-file-systems
   ;; %base-file-systems is what provides /dev/pts (devpts), /dev/shm,
@@ -103,12 +117,13 @@
           "xterm"
           "brightnessctl"
           "neovim"
+          "os-prober"
+          "ntfs-3g"
           "connman"
           "dbus"
           "adwaita-icon-theme"
           "icecat"
           "kitty"
-          "rofi"
           "feh"
           "picom"
           "dunst"

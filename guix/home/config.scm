@@ -71,10 +71,9 @@ exec_always --no-startup-id feh --bg-fill ~/.local/share/wallpapers/guix-dark.pn
 exec --no-startup-id picom --config ~/.config/picom/picom.conf
 exec --no-startup-id dunst
 
-# launcher: dmenu is the main launcher, rofi is the extra
-bindsym $mod+d exec --no-startup-id dmenu_run -i -nb '#1e1e2e' -nf '#cdd6f4' -sb '#89b4fa' -sf '#1e1e2e' -fn 'JetBrains Mono:size=11' -p 'run:'
-bindsym $mod+p exec --no-startup-id dmenu_run -i -nb '#1e1e2e' -nf '#cdd6f4' -sb '#89b4fa' -sf '#1e1e2e' -fn 'JetBrains Mono:size=11' -p 'run:'
-bindsym $mod+Shift+d exec --no-startup-id rofi -show drun
+# launcher: dmenu
+bindsym $mod+d exec --no-startup-id dmenu_run -i -nb '#1e1e2e' -nf '#cdd6f4' -sb '#89b4fa' -sf '#1e1e2e' -fn 'JetBrains Mono:size=11' -h 28 -p 'run:'
+bindsym $mod+p exec --no-startup-id dmenu_run -i -nb '#1e1e2e' -nf '#cdd6f4' -sb '#89b4fa' -sf '#1e1e2e' -fn 'JetBrains Mono:size=11' -h 28 -p 'run:'
 
 # terminal and browser
 bindsym $mod+Return exec $term
@@ -237,7 +236,7 @@ tztime local {
 "))
 
 ;; ---------------------------------------------------------------
-;; rice: kitty, rofi, picom, dunst, icecat
+;; rice: kitty, picom, dunst, icecat
 ;; ---------------------------------------------------------------
 
 (define %kitty-config
@@ -298,79 +297,6 @@ tab_title_template {index}: {title}
 copy_on_select no
 "))
 
-(define %rofi-config
-  (plain-file
-   "config.rasi"
-   "configuration {
-    font: \"JetBrains Mono 11\";
-    show-icons: true;
-    icon-theme: \"Adwaita\";
-    terminal: \"kitty\";
-    drun-display-format: \"{name}\";
-    display-drun: \"Apps\";
-    case-sensitive: false;
-}
-
-/* Catppuccin Mocha-ish theme.  Rofi 2.0 ignores Xresources, so the
-   colors live here instead of in ~/.Xresources. */
-window {
-    background-color: #1e1e2e;
-    border: 2px;
-    border-color: #89b4fa;
-    border-radius: 8px;
-    width: 40%;
-    padding: 10px;
-}
-
-mainbox {
-    spacing: 8px;
-}
-
-inputbar {
-    background-color: #313244;
-    border-radius: 6px;
-    padding: 8px;
-    spacing: 8px;
-}
-
-prompt {
-    background-color: transparent;
-    text-color: #89b4fa;
-}
-
-entry {
-    background-color: transparent;
-    text-color: #cdd6f4;
-    placeholder: \"Search\";
-    placeholder-color: #6c7086;
-}
-
-listview {
-    background-color: transparent;
-    lines: 8;
-    columns: 1;
-    spacing: 4px;
-    scrollbar: false;
-}
-
-element {
-    background-color: transparent;
-    text-color: #cdd6f4;
-    border-radius: 6px;
-    padding: 6px 8px;
-    spacing: 8px;
-}
-
-element-icon {
-    size: 1.2em;
-}
-
-element selected {
-    background-color: #89b4fa;
-    text-color: #1e1e2e;
-}
-"))
-
 (define %picom-config
   (plain-file
    "picom.conf"
@@ -381,11 +307,21 @@ shadow-radius = 8;
 shadow-opacity = 0.35;
 shadow-offset-x = -8;
 shadow-offset-y = -8;
-fading = true;
-fade-in-step = 0.03;
-fade-out-step = 0.03;
-inactive-opacity = 0.95;
-frame-opacity = 0.90;
+fading = false;
+fade-in-step = 1.0;
+fade-out-step = 1.0;
+no-fading-openclose = true;
+active-opacity = 0.9;
+inactive-opacity = 0.8;
+frame-opacity = 0.9;
+inactive-opacity-override = true;
+detect-client-opacity = true;
+opacity-rule = [
+  \"90:class_g = 'kitty'\",
+  \"90:class_g = 'XTerm'\",
+  \"90:class_g = 'dmenu'\",
+  \"90:class_g = 'Dmenu'\"
+];
 "))
 
 (define %dunst-config
@@ -554,7 +490,6 @@ vim.opt.updatetime = 50
          "adwaita-icon-theme"
          "icecat"
          "kitty"
-         "rofi"
          "feh"
          "picom"
          "dunst"
@@ -593,7 +528,6 @@ vim.opt.updatetime = 50
     'rice-config
     home-files-service-type
     (list `(".config/kitty/kitty.conf" ,%kitty-config)
-          `(".config/rofi/config.rasi" ,%rofi-config)
           `(".config/picom/picom.conf" ,%picom-config)
           `(".config/dunst/dunstrc" ,%dunst-config)
           `(".config/icecat/user.js" ,%icecat-user-js)
