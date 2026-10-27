@@ -72,8 +72,8 @@ exec --no-startup-id picom --config ~/.config/picom/picom.conf
 exec --no-startup-id dunst
 
 # launcher: dmenu
-bindsym $mod+d exec --no-startup-id dmenu_run -i -nb '#1e1e2e' -nf '#cdd6f4' -sb '#89b4fa' -sf '#1e1e2e' -fn 'JetBrains Mono:size=11' -h 28 -p 'run:'
-bindsym $mod+p exec --no-startup-id dmenu_run -i -nb '#1e1e2e' -nf '#cdd6f4' -sb '#89b4fa' -sf '#1e1e2e' -fn 'JetBrains Mono:size=11' -h 28 -p 'run:'
+bindsym $mod+d exec --no-startup-id dmenu_run -i -nb '#000000' -nf '#cdd6f4' -sb '#89b4fa' -sf '#000000' -fn 'JetBrains Mono:size=11' -h 28 -p 'run:'
+bindsym $mod+p exec --no-startup-id dmenu_run -i -nb '#000000' -nf '#cdd6f4' -sb '#89b4fa' -sf '#000000' -fn 'JetBrains Mono:size=11' -h 28 -p 'run:'
 
 # terminal and browser
 bindsym $mod+Return exec $term
@@ -151,18 +151,19 @@ smart_gaps on
 smart_borders on
 default_border pixel 2
 default_floating_border pixel 2
+border_radius 8
 hide_edge_borders smart
 focus_follows_mouse no
 mouse_warping output
 workspace_auto_back_and_forth yes
 
 # colors
-client.focused          #89b4fa #1e1e2e #cdd6f4 #89b4fa #89b4fa
-client.focused_inactive #45475a #1e1e2e #cdd6f4 #45475a #45475a
-client.unfocused        #45475a #1e1e2e #a6adc8 #45475a #45475a
-client.urgent           #f38ba8 #1e1e2e #1e1e2e #f38ba8 #f38ba8
-client.placeholder      #1e1e2e #1e1e2e #cdd6f4 #1e1e2e #1e1e2e
-client.background       #1e1e2e
+client.focused          #89b4fa #000000 #cdd6f4 #89b4fa #89b4fa
+client.focused_inactive #45475a #000000 #a6adc8 #45475a #45475a
+client.unfocused        #45475a #000000 #a6adc8 #45475a #45475a
+client.urgent           #f38ba8 #000000 #1e1e2e #f38ba8 #f38ba8
+client.placeholder      #000000 #000000 #cdd6f4 #000000 #000000
+client.background       #000000
 
 bar {
     status_command i3status -c ~/.config/i3status/config
@@ -171,13 +172,13 @@ bar {
     tray_output none
     font pango:JetBrains Mono 10
     colors {
-        background #1e1e2e
+        background #000000
         statusline #cdd6f4
-        separator #45475a
-        focused_workspace  #89b4fa #89b4fa #1e1e2e
-        active_workspace   #45475a #45475a #cdd6f4
-        inactive_workspace #1e1e2e #1e1e2e #a6adc8
-        urgent_workspace   #f38ba8 #f38ba8 #1e1e2e
+        separator #000000
+        focused_workspace  #89b4fa #89b4fa #000000
+        active_workspace   #313244 #313244 #cdd6f4
+        inactive_workspace #000000 #000000 #a6adc8
+        urgent_workspace   #f38ba8 #f38ba8 #000000
     }
 }
 
