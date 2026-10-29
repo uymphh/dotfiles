@@ -1,4 +1,4 @@
-;; dotfiles/guix/system/config.scm - simplified
+;; dotfiles/guix/system/config.scm - simple with safe nonguix fallback
 (use-modules (gnu)
              (gnu bootloader)
              (gnu bootloader grub)
@@ -15,13 +15,27 @@
              (gnu system keyboard)
              (gnu system linux-initrd)
              (gnu system shadow)
-             (guix gexp)
-             (nongnu packages linux)
-             (nongnu system linux-initrd))
+             (gnu packages linux)
+             (guix gexp))
 
 ;; kernel
-(define %my-kernel linux)
-(define %my-initrd microcode-initrd)
+(define %my-kernel
+  (catch #t
+    (lambda ()
+      (let ((mod (resolve-interface '(nongnu packages linux))))
+        (module-ref mod 'linux)))
+    (lambda _
+      linux-libre)))
+
+;; initrd
+(define %my-initrd
+  (catch #t
+    (lambda ()
+      (let ((mod (resolve-interface '(nongnu system linux-initrd))))
+        (module-ref mod 'microcode-initrd)))
+    (lambda _
+      #f)))
+
 (define %my-kernel-args '("quiet" "loglevel=3"))
 (define %my-firmware (list linux-firmware))
 
