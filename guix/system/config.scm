@@ -16,21 +16,30 @@
              (gnu system linux-initrd)
              (gnu packages)
              (gnu packages bash)
+             (gnu packages linux)
              (guix gexp)
              (guix utils)
-             (srfi srfi-1)
-             (nongnu packages linux)
-             (nongnu system linux-initrd))
+             (srfi srfi-1))
+
+(eval-when (expand load eval)
+  (catch #t
+    (lambda ()
+      (eval '(use-modules (nongnu packages linux) (nongnu system linux-initrd)) (current-module))
+      (module-set! (current-module) '%my-kernel (module-ref (current-module) 'linux))
+      (module-set! (current-module) '%my-initrd (module-ref (current-module) 'microcode-initrd))
+      (module-set! (current-module) '%use-nongnu-kernel? #t))
+    (lambda _ 
+      (module-set! (current-module) '%my-kernel linux-libre)
+      (module-set! (current-module) '%my-initrd (module-ref (resolve-interface '(gnu system linux-initrd)) 'microcode-initrd))
+      (module-set! (current-module) '%use-nongnu-kernel? #f))))
 
 ;; ---------------------------------------------------------------
-;; kernel and firmware (nonguix)
+;; kernel and firmware
 ;; ---------------------------------------------------------------
 
-(define %my-kernel
-  linux)
-
-(define %my-initrd
-  microcode-initrd)
+(define %my-kernel linux-libre)
+(define %my-initrd microcode-initrd)
+(define %use-nongnu-kernel? #f)
 
 (define %my-kernel-arguments
   '("quiet"
@@ -49,15 +58,12 @@
    (targets '("/boot/efi"))
    (menu-entries
     (list
-     ;; Windows (UEFI) - chainload from EFI partition
+     ;; Windows (UEFI) - chainload from EFI partition (try common locations)
      (menu-entry
       (label "Windows Boot Manager")
-      (device (file-system-device (find (lambda (fs)
-                                          (string=? (file-system-mount-point fs)
-                                                    "/boot/efi"))
-                                        %my-file-systems)))
+      (device "/dev/nvme0n1p1")
       (device-mount-point "/boot/efi")
-      (chain-loader "/efi/Microsoft/Boot/Bootmgfw.efi"))))
+      (chain-loader "/EFI/Microsoft/Boot/Bootmgfw.efi"))))
    (timeout 5)))
 
 (define %my-file-systems
