@@ -63,6 +63,11 @@
       (label "Windows Boot Manager")
       (device "/dev/nvme0n1p1")
       (device-mount-point "/boot/efi")
+      (chain-loader "/EFI/Microsoft/Boot/Bootmgfw.efi"))
+     (menu-entry
+      (label "Windows Boot Manager (ESP p6)")
+      (device "/dev/nvme0n1p6")
+      (device-mount-point "/boot/efi")
       (chain-loader "/EFI/Microsoft/Boot/Bootmgfw.efi"))))
    (timeout 5)))
 
