@@ -16,30 +16,16 @@
              (gnu system linux-initrd)
              (gnu packages)
              (gnu packages bash)
-             (gnu packages linux)
              (guix gexp)
-             (guix utils)
-             (srfi srfi-1))
-
-(eval-when (expand load eval)
-  (catch #t
-    (lambda ()
-      (eval '(use-modules (nongnu packages linux) (nongnu system linux-initrd)) (current-module))
-      (module-set! (current-module) '%my-kernel (module-ref (current-module) 'linux))
-      (module-set! (current-module) '%my-initrd (module-ref (current-module) 'microcode-initrd))
-      (module-set! (current-module) '%use-nongnu-kernel? #t))
-    (lambda _ 
-      (module-set! (current-module) '%my-kernel linux-libre)
-      (module-set! (current-module) '%my-initrd (module-ref (resolve-interface '(gnu system linux-initrd)) 'microcode-initrd))
-      (module-set! (current-module) '%use-nongnu-kernel? #f))))
+             (nongnu packages linux)
+             (nongnu system linux-initrd))
 
 ;; ---------------------------------------------------------------
-;; kernel and firmware
+;; kernel and firmware (nonguix)
 ;; ---------------------------------------------------------------
 
-(define %my-kernel linux-libre)
+(define %my-kernel linux)
 (define %my-initrd microcode-initrd)
-(define %use-nongnu-kernel? #f)
 
 (define %my-kernel-arguments
   '("quiet"
@@ -56,19 +42,6 @@
   (bootloader-configuration
    (bootloader grub-efi-bootloader)
    (targets '("/boot/efi"))
-   (menu-entries
-    (list
-     ;; Windows (UEFI) - chainload from EFI partition (try common locations)
-     (menu-entry
-      (label "Windows Boot Manager")
-      (device "/dev/nvme0n1p1")
-      (device-mount-point "/boot/efi")
-      (chain-loader "/EFI/Microsoft/Boot/Bootmgfw.efi"))
-     (menu-entry
-      (label "Windows Boot Manager (ESP p6)")
-      (device "/dev/nvme0n1p6")
-      (device-mount-point "/boot/efi")
-      (chain-loader "/EFI/Microsoft/Boot/Bootmgfw.efi"))))
    (timeout 5)))
 
 (define %my-file-systems
