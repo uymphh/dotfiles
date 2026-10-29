@@ -24,18 +24,18 @@
 ;; ---------------------------------------------------------------
 
 (define %my-kernel
-  (catch #t
+  (catch 'misc-error
     (lambda ()
-      (resolve-interface '(nongnu packages linux))
-      (@@ (nongnu packages linux) linux))
+      (let ((mod (resolve-interface '(nongnu packages linux))))
+        (module-ref mod 'linux)))
     (lambda _
       linux-libre)))
 
 (define %my-initrd
   (catch #t
     (lambda ()
-      (resolve-interface '(nongnu system linux-initrd))
-      (@@ (nongnu system linux-initrd) microcode-initrd))
+      (let ((mod (resolve-interface '(nongnu system linux-initrd))))
+        (module-ref mod 'microcode-initrd)))
     (lambda _
       (module-ref (resolve-interface '(gnu system linux-initrd)) 'microcode-initrd))))
 
