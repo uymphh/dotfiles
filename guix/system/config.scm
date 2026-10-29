@@ -16,6 +16,7 @@
              (gnu system linux-initrd)
              (gnu system shadow)
              (gnu packages linux)
+             (gnu packages firmware)
              (guix gexp))
 
 ;; kernel
