@@ -16,16 +16,28 @@
              (gnu system linux-initrd)
              (gnu packages)
              (gnu packages bash)
-             (guix gexp)
-             (nongnu packages linux)
-             (nongnu system linux-initrd))
+             (gnu packages linux)
+             (guix gexp))
 
 ;; ---------------------------------------------------------------
-;; kernel and firmware (nonguix)
+;; kernel and firmware
 ;; ---------------------------------------------------------------
 
-(define %my-kernel linux)
-(define %my-initrd microcode-initrd)
+(define %my-kernel
+  (catch #t
+    (lambda ()
+      (resolve-interface '(nongnu packages linux))
+      (@@ (nongnu packages linux) linux))
+    (lambda _
+      linux-libre)))
+
+(define %my-initrd
+  (catch #t
+    (lambda ()
+      (resolve-interface '(nongnu system linux-initrd))
+      (@@ (nongnu system linux-initrd) microcode-initrd))
+    (lambda _
+      (module-ref (resolve-interface '(gnu system linux-initrd)) 'microcode-initrd))))
 
 (define %my-kernel-arguments
   '("quiet"
