@@ -16,7 +16,6 @@
              (gnu system linux-initrd)
              (gnu system shadow)
              (gnu packages linux)
-             (gnu packages firmware)
              (guix gexp))
 
 ;; kernel
@@ -38,7 +37,13 @@
       #f)))
 
 (define %my-kernel-args '("quiet" "loglevel=3"))
-(define %my-firmware (list linux-firmware))
+(define %my-firmware
+  (catch #t
+    (lambda ()
+      (let ((mod (resolve-interface '(nongnu packages linux))))
+        (list (module-ref mod 'linux-firmware))))
+    (lambda _
+      '())))
 
 ;; boot
 (define %my-bootloader
