@@ -27,6 +27,6 @@
   programs.bash.enable = true;
 
   # Leave this at the Home Manager release you first use; don't change casually.
-  home.stateVersion = "24.11"; # CHANGE ME if needed
+  home.stateVersion = "26.05";
   programs.home-manager.enable = true;
 }

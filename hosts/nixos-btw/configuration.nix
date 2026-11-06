@@ -52,5 +52,5 @@
 
   # Set this to the NixOS release you first installed on the target machine.
   # Do NOT change casually after installation.
-  system.stateVersion = "24.11"; # CHANGE ME if your initial install differs
+  system.stateVersion = "26.05";
 }
