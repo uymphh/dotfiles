@@ -14,7 +14,7 @@
     let
       system = "x86_64-linux";
       username = "arctan"; # CHANGE ME to your username on the target machine
-      hostname = "msi-thin-15"; # CHANGE ME if you use a different host name
+      hostname = "nixos-btw"; # CHANGE ME if you use a different host name
     in
     {
       nixosConfigurations.${hostname} = nixpkgs.lib.nixosSystem {

@@ -3,7 +3,7 @@
 {
   imports = [
     # IMPORTANT: Replace this placeholder with the real file generated on the target machine:
-    #   sudo nixos-generate-config --show-hardware-config > /etc/nixos-or-repo/hosts/msi-thin-15/hardware-configuration.nix
+    #   sudo nixos-generate-config --show-hardware-config > hosts/nixos-btw/hardware-configuration.nix
     # Verify disk/ESP/boot settings carefully (dual-boot / UEFI / Windows).
     ./hardware-configuration.nix
   ];
@@ -21,7 +21,7 @@
   # inspecting `lsblk -f` and `efibootmgr -v` on the target machine.
 
   # --- Basics ---------------------------------------------------------------
-  networking.hostName = "msi-thin-15"; # keep in sync with flake host name
+  networking.hostName = "nixos-btw"; # keep in sync with flake host name
   networking.networkmanager.enable = true;
 
   time.timeZone = "America/Los_Angeles"; # CHANGE ME

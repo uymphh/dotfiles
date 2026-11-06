@@ -13,14 +13,14 @@ Minimal, working NixOS flake for getting started on the target machine:
 
 These values are **placeholders until verified on the target machine**:
 
-1. **Hardware config**: replace `hosts/msi-thin-15/hardware-configuration.nix` with the real one:
+1. **Hardware config**: replace `hosts/nixos-btw/hardware-configuration.nix` with the real one:
    ```bash
-   sudo nixos-generate-config --show-hardware-config > hosts/msi-thin-15/hardware-configuration.nix
+   sudo nixos-generate-config --show-hardware-config > hosts/nixos-btw/hardware-configuration.nix
    ```
    Verify filesystems, ESP mount point, swap, and kernel modules. **Do not guess disk devices** on a dual-boot/UEFI system.
 2. **Bootloader / dual-boot**: confirm `lsblk -f` and `efibootmgr -v`. The config enables `systemd-boot` by default; adjust if your setup uses GRUB or a specific Windows/UEFI layout.
 3. **Username/hostname**: update `username`/`hostname` in `flake.nix`, user/home paths, `networking.hostName`, and `home/arctan/` directory name if needed.
-4. **Timezone / locale / state versions**: adjust in `hosts/msi-thin-15/configuration.nix` and `home/arctan/home.nix`.
+4. **Timezone / locale / state versions**: adjust in `hosts/nixos-btw/configuration.nix` and `home/arctan/home.nix`.
 5. **opencode package**: confirm it exists/evaluates:
    ```bash
    nix search nixpkgs opencode
@@ -38,10 +38,10 @@ From the repo root (after fixing hardware/boot/user settings):
 nix flake lock
 
 # Check evaluation/build
-sudo nixos-rebuild build --flake .#msi-thin-15
+sudo nixos-rebuild build --flake .#nixos-btw
 
 # Switch when ready
-sudo nixos-rebuild switch --flake .#msi-thin-15
+sudo nixos-rebuild switch --flake .#nixos-btw
 ```
 
 ## Layout
@@ -49,8 +49,9 @@ sudo nixos-rebuild switch --flake .#msi-thin-15
 ```text
 .
 ├── flake.nix
+├── OPENCODE.md
 ├── hosts/
-│   └── msi-thin-15/
+│   └── nixos-btw/
 │       ├── configuration.nix
 │       └── hardware-configuration.nix   # replace with generated file
 ├── home/

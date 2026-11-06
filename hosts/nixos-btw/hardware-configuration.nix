@@ -1,7 +1,7 @@
 # PLACEHOLDER — DO NOT USE AS-IS ON A REAL MACHINE
 #
 # Generate the real hardware configuration on the target NixOS machine:
-#   sudo nixos-generate-config --show-hardware-config > hosts/msi-thin-15/hardware-configuration.nix
+#   sudo nixos-generate-config --show-hardware-config > hosts/nixos-btw/hardware-configuration.nix
 # (or copy from /etc/nixos/hardware-configuration.nix after running nixos-generate-config)
 #
 # VERIFY CAREFULLY:
